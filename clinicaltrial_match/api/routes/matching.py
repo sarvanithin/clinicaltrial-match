@@ -1,4 +1,5 @@
 """Matching routes: POST /v1/match, GET /v1/match/{match_id}, history, batch."""
+
 from __future__ import annotations
 
 import asyncio
@@ -37,7 +38,6 @@ async def match_patient(request: Request, body: MatchRequest) -> MatchResponse:
 
     patient_repo: PatientRepository = request.app.state.patient_repo
     engine: MatchingEngine = request.app.state.matching_engine
-    db = request.app.state.db
 
     try:
         patient = patient_repo.get(body.patient_id)

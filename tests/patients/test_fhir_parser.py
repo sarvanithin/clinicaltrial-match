@@ -1,4 +1,5 @@
 """Tests for FHIR R4 bundle parser — pure function, no mocks needed."""
+
 from __future__ import annotations
 
 from clinicaltrial_match.patients.fhir_parser import parse_fhir_bundle

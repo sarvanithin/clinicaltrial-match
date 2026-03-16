@@ -1,4 +1,5 @@
 """Tests for patient repository."""
+
 from __future__ import annotations
 
 import time

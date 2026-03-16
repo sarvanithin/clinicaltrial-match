@@ -1,7 +1,7 @@
 """Patient repository: persistence layer for patient records."""
+
 from __future__ import annotations
 
-import json
 import time
 
 from clinicaltrial_match.infrastructure.db import Database
@@ -14,13 +14,15 @@ class PatientRepository:
 
     def save(self, patient: Patient) -> None:
         features_json = patient.features.model_dump_json() if patient.features else None
-        self._db.upsert_patient({
-            "patient_id": patient.patient_id,
-            "source_type": patient.source_type,
-            "raw_input": patient.raw_input,
-            "features": features_json,
-            "created_at": patient.created_at or time.time(),
-        })
+        self._db.upsert_patient(
+            {
+                "patient_id": patient.patient_id,
+                "source_type": patient.source_type,
+                "raw_input": patient.raw_input,
+                "features": features_json,
+                "created_at": patient.created_at or time.time(),
+            }
+        )
 
     def get(self, patient_id: str) -> Patient | None:
         row = self._db.get_patient(patient_id)

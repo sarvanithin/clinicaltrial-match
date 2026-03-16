@@ -4,6 +4,7 @@ Async Anthropic client wrapper with model routing and retry logic.
 Routes to haiku (fast/cheap) for parsing/extraction tasks and
 sonnet (reasoning) for complex constraint evaluation.
 """
+
 from __future__ import annotations
 
 import os

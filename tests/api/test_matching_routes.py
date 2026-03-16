@@ -1,25 +1,24 @@
 """Tests for matching API routes."""
+
 from __future__ import annotations
 
-import json
 import time
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from clinicaltrial_match.api.app import create_app
-from clinicaltrial_match.matching.models import MatchRequest, MatchResult, MatchExplanation
+from clinicaltrial_match.matching.models import MatchExplanation, MatchResult
 from clinicaltrial_match.patients.models import Gender, Patient, PatientFeatures
 
 
 def _make_app_with_mocks(patient: Patient, match_results: list[MatchResult]):
-    app = create_app.__wrapped__() if hasattr(create_app, '__wrapped__') else None
+    app = create_app.__wrapped__() if hasattr(create_app, "__wrapped__") else None
     # Build app directly without lifespan
     from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from clinicaltrial_match.api.routes.matching import router as matching_router
+
     from clinicaltrial_match.api.routes.health import router as health_router
+    from clinicaltrial_match.api.routes.matching import router as matching_router
 
     test_app = FastAPI()
     test_app.include_router(matching_router, prefix="/v1/match")
@@ -93,9 +92,11 @@ class TestMatchRoute:
         assert data["matches"][0]["nct_id"] == "NCT99999999"
 
     def test_match_patient_not_found(self):
-        app = _make_app_with_mocks.__wrapped__ if hasattr(_make_app_with_mocks, '__wrapped__') else None
+        app = _make_app_with_mocks.__wrapped__ if hasattr(_make_app_with_mocks, "__wrapped__") else None
         from fastapi import FastAPI
+
         from clinicaltrial_match.api.routes.matching import router as matching_router
+
         test_app = FastAPI()
         test_app.include_router(matching_router, prefix="/v1/match")
         patient_repo = MagicMock()

@@ -4,10 +4,10 @@ Clinical note extractor using spaCy NER + Claude haiku-4-5 tool-use.
 For unstructured clinical text → PatientFeatures.
 Notes >4000 tokens are chunked and merged.
 """
+
 from __future__ import annotations
 
 import hashlib
-import json
 import time
 from typing import Any
 
@@ -187,6 +187,7 @@ class NoteExtractor:
         if self._nlp is None:
             try:
                 import spacy
+
                 self._nlp = spacy.load("en_core_web_sm")
             except Exception:
                 self._nlp = None

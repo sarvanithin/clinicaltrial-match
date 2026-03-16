@@ -1,4 +1,5 @@
 """Synthetic parsed EligibilityCriteria fixture."""
+
 from __future__ import annotations
 
 from clinicaltrial_match.trials.models import (
@@ -14,15 +15,9 @@ from clinicaltrial_match.trials.models import (
 def make_sample_criteria() -> EligibilityCriteria:
     return EligibilityCriteria(
         raw_inclusion_text=(
-            "Adults 18 years or older\n"
-            "Confirmed diagnosis of type 2 diabetes mellitus\n"
-            "HbA1c between 7.0 and 10.0%"
+            "Adults 18 years or older\nConfirmed diagnosis of type 2 diabetes mellitus\nHbA1c between 7.0 and 10.0%"
         ),
-        raw_exclusion_text=(
-            "Renal impairment (eGFR < 30 mL/min)\n"
-            "Current use of insulin\n"
-            "Pregnant or breastfeeding"
-        ),
+        raw_exclusion_text=("Renal impairment (eGFR < 30 mL/min)\nCurrent use of insulin\nPregnant or breastfeeding"),
         age=AgeConstraint(minimum_age_years=18, maximum_age_years=75),
         gender=GenderConstraint(allowed="ALL"),
         diagnoses=DiagnosisConstraint(

@@ -9,6 +9,7 @@ Confidence tiers:
   - low/potentially_eligible:   composite >= 0.3
   - ineligible:                 composite < 0.3
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -22,12 +23,7 @@ CONSTRAINT_WEIGHT = 0.60
 def _is_hard_constraint(result: ConstraintResult) -> bool:
     """Age, gender, and explicit exclusions are hard constraints."""
     c = result.criterion.lower()
-    return (
-        c.startswith("age")
-        or c.startswith("gender")
-        or c.startswith("no diagnosis")
-        or c.startswith("not on medication")
-    )
+    return c.startswith("age") or c.startswith("gender") or c.startswith("no diagnosis") or c.startswith("not on medication")
 
 
 def _assign_tier(
@@ -49,27 +45,15 @@ def _hard_failure_sentence(result: ConstraintResult) -> str:
     c = result.criterion.lower()
     val = result.patient_value or "unknown"
     if c.startswith("age"):
-        return (
-            f"Patient age ({val}) does not meet the trial age requirement "
-            f"— {result.reason}"
-        )
+        return f"Patient age ({val}) does not meet the trial age requirement — {result.reason}"
     if c.startswith("gender"):
-        return (
-            f"Patient gender ({val}) does not match the trial gender restriction "
-            f"— {result.reason}"
-        )
+        return f"Patient gender ({val}) does not match the trial gender restriction — {result.reason}"
     if c.startswith("no diagnosis"):
         condition = result.criterion.split("no diagnosis", 1)[-1].strip(" :")
-        return (
-            f"Patient has an excluded diagnosis ({condition or val}) "
-            f"that disqualifies them from this trial — {result.reason}"
-        )
+        return f"Patient has an excluded diagnosis ({condition or val}) that disqualifies them from this trial — {result.reason}"
     if c.startswith("not on medication"):
         med = result.criterion.split("not on medication", 1)[-1].strip(" :")
-        return (
-            f"Patient is on a prohibited medication ({med or val}) "
-            f"that disqualifies them from this trial — {result.reason}"
-        )
+        return f"Patient is on a prohibited medication ({med or val}) that disqualifies them from this trial — {result.reason}"
     return result.reason
 
 

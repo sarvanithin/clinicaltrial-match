@@ -1,4 +1,5 @@
 """Entry point: python -m clinicaltrial_match serve"""
+
 from __future__ import annotations
 
 import argparse
@@ -25,8 +26,9 @@ def main() -> None:
 
 def _serve(args: argparse.Namespace) -> None:
     import uvicorn
-    from clinicaltrial_match.config import get_config
+
     from clinicaltrial_match.api.app import create_app
+    from clinicaltrial_match.config import get_config
 
     config = get_config()
     host = args.host or config.api.host

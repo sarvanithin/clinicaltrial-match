@@ -3,18 +3,19 @@ FastAPI application factory for clinicaltrial-match.
 
 Mirrors medguard's create_app() pattern with lifespan for embedding warmup.
 """
+
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from clinicaltrial_match.api.routes.health import router as health_router
 from clinicaltrial_match.api.routes.matching import router as matching_router
@@ -79,12 +80,11 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     from clinicaltrial_match.config import get_config
+
     config = get_config()
 
     structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(logging, config.api.log_level.upper(), logging.INFO)
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, config.api.log_level.upper(), logging.INFO)),
     )
 
     app = FastAPI(
@@ -107,6 +107,7 @@ def create_app() -> FastAPI:
     # Optional API key auth — only active when CTM_AUTH__API_KEY is set
     if config.auth.api_key:
         from clinicaltrial_match.api.middleware import APIKeyMiddleware
+
         app.add_middleware(APIKeyMiddleware, api_key=config.auth.api_key)
 
     app.include_router(trials_router, prefix="/v1/trials", tags=["trials"])

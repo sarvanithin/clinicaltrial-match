@@ -1,4 +1,5 @@
 """Tests for the constraint evaluator — pure function, no mocks."""
+
 from __future__ import annotations
 
 from clinicaltrial_match.matching.constraints import ConstraintEvaluator
@@ -88,49 +89,37 @@ class TestGenderConstraint:
 
 class TestDiagnosisConstraint:
     def test_required_diagnosis_found(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(required_conditions=["Type 2 diabetes mellitus"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(required_conditions=["Type 2 diabetes mellitus"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "Type 2 diabetes mellitus" in r.criterion)
         assert r.satisfied
 
     def test_required_diagnosis_missing(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(required_conditions=["Heart failure"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(required_conditions=["Heart failure"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "Heart failure" in r.criterion)
         assert not r.satisfied
 
     def test_excluded_diagnosis_found_fails(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(excluded_conditions=["Type 2 diabetes mellitus"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(excluded_conditions=["Type 2 diabetes mellitus"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "no diagnosis" in r.criterion)
         assert not r.satisfied
 
     def test_excluded_diagnosis_absent_passes(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(excluded_conditions=["Cancer"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(excluded_conditions=["Cancer"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "no diagnosis" in r.criterion)
         assert r.satisfied
 
     def test_icd10_code_exact_match(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(required_conditions=["E11"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(required_conditions=["E11"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "E11" in r.criterion)
         assert r.satisfied
 
     def test_borderline_match_flagged(self):
-        criteria = _make_criteria(
-            diagnoses=DiagnosisConstraint(required_conditions=["Type 2 diabetes"])
-        )
+        criteria = _make_criteria(diagnoses=DiagnosisConstraint(required_conditions=["Type 2 diabetes"]))
         _, borderline = evaluator.evaluate(criteria, _make_features())
         assert len(borderline) > 0
 
@@ -145,17 +134,13 @@ class TestLabConstraint:
         assert r.satisfied  # 8.2 is between 7 and 10
 
     def test_lab_outside_range(self):
-        criteria = _make_criteria(
-            labs=[LabConstraint(test_name="HbA1c", operator="<=", value=7.0, unit="%")]
-        )
+        criteria = _make_criteria(labs=[LabConstraint(test_name="HbA1c", operator="<=", value=7.0, unit="%")])
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "HbA1c" in r.criterion)
         assert not r.satisfied  # 8.2 > 7.0
 
     def test_missing_lab_skipped(self):
-        criteria = _make_criteria(
-            labs=[LabConstraint(test_name="eGFR", operator=">=", value=30.0, unit="mL/min")]
-        )
+        criteria = _make_criteria(labs=[LabConstraint(test_name="eGFR", operator=">=", value=30.0, unit="mL/min")])
         features = _make_features(lab_values=[])
         results, _ = evaluator.evaluate(criteria, features)
         lab_results = [r for r in results if "eGFR" in r.criterion]
@@ -164,25 +149,19 @@ class TestLabConstraint:
 
 class TestMedicationConstraint:
     def test_required_medication_found(self):
-        criteria = _make_criteria(
-            medications=MedicationConstraint(required=["Metformin"])
-        )
+        criteria = _make_criteria(medications=MedicationConstraint(required=["Metformin"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "on medication" in r.criterion)
         assert r.satisfied
 
     def test_excluded_medication_found_fails(self):
-        criteria = _make_criteria(
-            medications=MedicationConstraint(excluded=["Metformin"])
-        )
+        criteria = _make_criteria(medications=MedicationConstraint(excluded=["Metformin"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "not on medication" in r.criterion)
         assert not r.satisfied
 
     def test_excluded_medication_absent_passes(self):
-        criteria = _make_criteria(
-            medications=MedicationConstraint(excluded=["Insulin"])
-        )
+        criteria = _make_criteria(medications=MedicationConstraint(excluded=["Insulin"]))
         results, _ = evaluator.evaluate(criteria, _make_features())
         r = next(r for r in results if "not on medication" in r.criterion)
         assert r.satisfied

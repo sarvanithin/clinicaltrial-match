@@ -31,7 +31,7 @@ jobs:
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
 
       - name: Install package + dev deps
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev]" pytest-cov
 
       - name: Run unit tests (no external APIs)
         run: pytest tests/ -m "not integration" -v --cov=clinicaltrial_match --cov-report=xml --cov-report=term-missing

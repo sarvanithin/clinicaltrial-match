@@ -7,10 +7,10 @@ For each patient, the engine:
 3. Handles borderline diagnosis checks via Claude (with DB cache)
 4. Ranks and returns top-N results
 """
+
 from __future__ import annotations
 
 import hashlib
-import json
 import time
 from typing import Any
 
@@ -68,11 +68,7 @@ class MatchingEngine:
 
             # Apply condition filter
             if request.condition_filter:
-                cond_match = any(
-                    fc.lower() in c.lower()
-                    for fc in request.condition_filter
-                    for c in trial.conditions
-                )
+                cond_match = any(fc.lower() in c.lower() for fc in request.condition_filter for c in trial.conditions)
                 if not cond_match:
                     continue
 
@@ -95,16 +91,18 @@ class MatchingEngine:
             if result.composite_score >= request.min_score:
                 results.append(result)
                 # Persist
-                self._db.insert_match_result({
-                    "match_id": match_id,
-                    "patient_id": features.patient_id,
-                    "nct_id": nct_id,
-                    "composite_score": result.composite_score,
-                    "confidence": result.confidence,
-                    "explanation": result.explanation.model_dump_json(),
-                    "status": result.status,
-                    "created_at": result.created_at,
-                })
+                self._db.insert_match_result(
+                    {
+                        "match_id": match_id,
+                        "patient_id": features.patient_id,
+                        "nct_id": nct_id,
+                        "composite_score": result.composite_score,
+                        "confidence": result.confidence,
+                        "explanation": result.explanation.model_dump_json(),
+                        "status": result.status,
+                        "created_at": result.created_at,
+                    }
+                )
 
         results.sort(key=lambda r: r.composite_score, reverse=True)
         return results[: request.max_results]

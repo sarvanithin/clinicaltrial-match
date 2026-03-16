@@ -1,10 +1,10 @@
 """Tests for matching engine."""
+
 from __future__ import annotations
 
 import time
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
-import numpy as np
 import pytest
 
 from clinicaltrial_match.matching.engine import MatchingEngine
@@ -50,6 +50,7 @@ def engine_with_mock_search(populated_db_and_repo, mock_embeddings, mock_claude)
     db, repo = populated_db_and_repo
     # Pre-insert patient so FK constraint is satisfied
     from clinicaltrial_match.patients.repository import PatientRepository
+
     PatientRepository(db).save(_make_patient_record())
     # Make semantic searcher return the stored trial as top hit
     searcher = MagicMock(spec=SemanticSearcher)
@@ -59,6 +60,7 @@ def engine_with_mock_search(populated_db_and_repo, mock_embeddings, mock_claude)
 
 def _make_patient_record():
     from clinicaltrial_match.patients.models import Patient
+
     return Patient(
         patient_id="p-001",
         source_type="fhir",
@@ -110,6 +112,7 @@ async def test_match_respects_min_score(engine_with_mock_search):
 async def test_match_no_candidates(populated_db_and_repo, mock_embeddings, mock_claude):
     db, repo = populated_db_and_repo
     from clinicaltrial_match.patients.repository import PatientRepository
+
     PatientRepository(db).save(_make_patient_record())
     searcher = MagicMock(spec=SemanticSearcher)
     searcher.search.return_value = []

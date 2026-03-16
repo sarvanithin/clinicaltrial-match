@@ -1,6 +1,6 @@
 """Synthetic FHIR R4 Bundle fixture."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 SAMPLE_FHIR_BUNDLE = {
     "resourceType": "Bundle",

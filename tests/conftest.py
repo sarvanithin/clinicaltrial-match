@@ -1,4 +1,5 @@
 """Shared test fixtures: in-memory SQLite, mock Claude, deterministic embeddings."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -25,18 +26,18 @@ def mock_claude():
     claude.fast_model = "claude-haiku-4-5-20251001"
     claude.reasoning_model = "claude-sonnet-4-6-20251101"
     # Default tool_use returns a high-confidence extraction
-    claude.tool_use = AsyncMock(return_value={
-        "required_diagnoses": ["Type 2 diabetes mellitus"],
-        "excluded_diagnoses": [],
-        "required_medications": [],
-        "excluded_medications": ["insulin"],
-        "lab_constraints": [
-            {"test_name": "HbA1c", "operator": "between", "value": 7.0, "value_upper": 10.0, "unit": "%"}
-        ],
-        "other_inclusion": [],
-        "other_exclusion": [],
-        "parse_confidence": 0.9,
-    })
+    claude.tool_use = AsyncMock(
+        return_value={
+            "required_diagnoses": ["Type 2 diabetes mellitus"],
+            "excluded_diagnoses": [],
+            "required_medications": [],
+            "excluded_medications": ["insulin"],
+            "lab_constraints": [{"test_name": "HbA1c", "operator": "between", "value": 7.0, "value_upper": 10.0, "unit": "%"}],
+            "other_inclusion": [],
+            "other_exclusion": [],
+            "parse_confidence": 0.9,
+        }
+    )
     claude.complete = AsyncMock(return_value="yes")
     return claude
 

@@ -3,6 +3,7 @@ SQLite database layer with WAL mode for concurrent reads.
 
 Provides schema initialization, typed CRUD helpers, and connection management.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,7 +11,6 @@ import sqlite3
 import time
 from pathlib import Path
 from typing import Any
-
 
 _SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -141,9 +141,7 @@ class Database:
         self.conn.commit()
 
     def update_trial_embedding(self, nct_id: str, embedding_bytes: bytes) -> None:
-        self.conn.execute(
-            "UPDATE trials SET embedding=? WHERE nct_id=?", (embedding_bytes, nct_id)
-        )
+        self.conn.execute("UPDATE trials SET embedding=? WHERE nct_id=?", (embedding_bytes, nct_id))
         self.conn.commit()
 
     def get_trial(self, nct_id: str) -> dict[str, Any] | None:
@@ -174,9 +172,7 @@ class Database:
         return [dict(r) for r in rows], total
 
     def get_all_trial_embeddings(self) -> list[tuple[str, bytes]]:
-        rows = self.conn.execute(
-            "SELECT nct_id, embedding FROM trials WHERE embedding IS NOT NULL"
-        ).fetchall()
+        rows = self.conn.execute("SELECT nct_id, embedding FROM trials WHERE embedding IS NOT NULL").fetchall()
         return [(r["nct_id"], r["embedding"]) for r in rows]
 
     def count_trials(self) -> int:
@@ -240,9 +236,7 @@ class Database:
         return dict(row) if row else None
 
     def list_sync_jobs(self, limit: int = 10) -> list[dict[str, Any]]:
-        rows = self.conn.execute(
-            "SELECT * FROM sync_jobs ORDER BY created_at DESC LIMIT ?", (limit,)
-        ).fetchall()
+        rows = self.conn.execute("SELECT * FROM sync_jobs ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
         return [dict(r) for r in rows]
 
     # --- Patients (list) ---
@@ -281,6 +275,7 @@ class Database:
         for row in rows:
             try:
                 import json as _json
+
                 conds = _json.loads(row["conditions"])
                 for c in conds:
                     if isinstance(c, str) and c and c not in seen:

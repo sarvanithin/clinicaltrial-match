@@ -7,6 +7,7 @@ Manages:
 - In-memory numpy cosine similarity index
 - Optional FAISS index for large collections (>threshold trials)
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -26,6 +27,7 @@ class EmbeddingIndex:
     def _load_model(self) -> None:
         if self._model is None:
             from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(self._config.model_name)
 
     def encode(self, texts: list[str]) -> np.ndarray:
@@ -81,6 +83,7 @@ class EmbeddingIndex:
     def _build_faiss(self) -> None:
         try:
             import faiss  # type: ignore[import]
+
             dim = self._matrix.shape[1]  # type: ignore[union-attr]
             index = faiss.IndexFlatIP(dim)
             index.add(self._matrix.astype(np.float32))  # type: ignore[union-attr]
@@ -94,9 +97,7 @@ class EmbeddingIndex:
             return []
         top_k = min(top_k, len(self._nct_ids))
         if self._faiss_index is not None:
-            scores, indices = self._faiss_index.search(
-                query_vec.reshape(1, -1).astype(np.float32), top_k
-            )
+            scores, indices = self._faiss_index.search(query_vec.reshape(1, -1).astype(np.float32), top_k)
             results = []
             for idx, score in zip(indices[0], scores[0]):
                 if idx >= 0:

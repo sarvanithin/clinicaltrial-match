@@ -9,12 +9,13 @@ Handles FHIR Bundle and individual resource types:
 
 No fhirclient dependency — all parsing via Pydantic with extra="ignore".
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import time
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -168,8 +169,8 @@ def parse_fhir_bundle(raw_json: str | dict[str, Any]) -> Patient:
             name = _concept_name(c.code)
             code, code_system = _concept_code(c.code)
             clin_status = _concept_name(c.clinicalStatus)
-            status_val: Any = "active" if "active" in clin_status.lower() else (
-                "resolved" if "resolved" in clin_status.lower() else "unknown"
+            status_val: Any = (
+                "active" if "active" in clin_status.lower() else ("resolved" if "resolved" in clin_status.lower() else "unknown")
             )
             onset: date | None = None
             if c.onsetDateTime:
@@ -178,24 +179,31 @@ def parse_fhir_bundle(raw_json: str | dict[str, Any]) -> Patient:
                 except Exception:
                     pass
             if name:
-                diagnoses.append(Diagnosis(
-                    name=name, code=code, code_system=code_system,  # type: ignore[arg-type]
-                    onset_date=onset, status=status_val,
-                ))
+                diagnoses.append(
+                    Diagnosis(
+                        name=name,
+                        code=code,
+                        code_system=code_system,  # type: ignore[arg-type]
+                        onset_date=onset,
+                        status=status_val,
+                    )
+                )
 
         elif rtype == "Observation":
             obs = _FHIRObservation.model_validate(resource)
             name = _concept_name(obs.code)
             if obs.valueQuantity and obs.valueQuantity.value is not None and name:
                 ref = obs.referenceRange[0] if obs.referenceRange else {}
-                lab_values.append(LabValue(
-                    test_name=name,
-                    value=obs.valueQuantity.value,
-                    unit=obs.valueQuantity.unit,
-                    reference_range_low=ref.get("low", {}).get("value") if ref else None,
-                    reference_range_high=ref.get("high", {}).get("value") if ref else None,
-                    collected_date=date.fromisoformat(obs.effectiveDateTime[:10]) if obs.effectiveDateTime else None,
-                ))
+                lab_values.append(
+                    LabValue(
+                        test_name=name,
+                        value=obs.valueQuantity.value,
+                        unit=obs.valueQuantity.unit,
+                        reference_range_low=ref.get("low", {}).get("value") if ref else None,
+                        reference_range_high=ref.get("high", {}).get("value") if ref else None,
+                        collected_date=date.fromisoformat(obs.effectiveDateTime[:10]) if obs.effectiveDateTime else None,
+                    )
+                )
 
         elif rtype in ("MedicationStatement", "MedicationRequest"):
             med = _FHIRMedicationStatement.model_validate(resource)

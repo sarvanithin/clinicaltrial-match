@@ -1,4 +1,5 @@
 """Trials routes: GET/POST /v1/trials, sync, compare, autocomplete."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,9 +100,7 @@ async def sync_trials(request: Request, body: SyncRequest) -> SyncResponse:
         )
 
     try:
-        asyncio.create_task(
-            _run_sync(job_id, body, db, fetcher, parser, repo, embeddings)
-        )
+        asyncio.create_task(_run_sync(job_id, body, db, fetcher, parser, repo, embeddings))
     except Exception as exc:
         logger.error("sync_task_create_error", job_id=job_id, error=str(exc))
         db.update_sync_job(job_id, status="failed", error=str(exc)[:500])
@@ -220,6 +219,7 @@ async def compare_trials(request: Request, body: CompareRequest) -> CompareRespo
             try:
                 from clinicaltrial_match.matching.constraints import ConstraintEvaluator
                 from clinicaltrial_match.trials.models import EligibilityCriteria
+
                 criteria = EligibilityCriteria.model_validate_json(row["eligibility_criteria"])
                 evaluator = ConstraintEvaluator()
                 constraint_results, _ = evaluator.evaluate(criteria, patient_features)
@@ -253,10 +253,7 @@ async def autocomplete_conditions(
         )
 
     q_lower = q.lower().strip()
-    suggestions = [
-        c for c in all_conditions
-        if not q_lower or q_lower in c.lower()
-    ][:10]
+    suggestions = [c for c in all_conditions if not q_lower or q_lower in c.lower()][:10]
 
     return AutocompleteResponse(suggestions=suggestions)
 
@@ -280,6 +277,7 @@ async def _run_sync(
     embeddings,
 ) -> None:
     import time
+
     db.update_sync_job(job_id, status="running")
     fetched = 0
     parsed = 0

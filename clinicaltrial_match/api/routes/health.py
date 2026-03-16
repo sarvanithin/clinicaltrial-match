@@ -1,12 +1,13 @@
 """GET /v1/health"""
+
 from __future__ import annotations
 
 import time
 
 from fastapi import APIRouter, Request
 
-from clinicaltrial_match.api.models import HealthResponse
 from clinicaltrial_match import __version__
+from clinicaltrial_match.api.models import HealthResponse
 
 router = APIRouter()
 _start_time = time.time()

@@ -1,4 +1,5 @@
 """Trial repository: persistence layer for clinical trials."""
+
 from __future__ import annotations
 
 import json
@@ -18,33 +19,31 @@ class TrialRepository:
         self._embeddings = embeddings
 
     def save(self, trial: Trial) -> None:
-        criteria_json = (
-            trial.eligibility_criteria.model_dump_json()
-            if trial.eligibility_criteria
-            else None
-        )
+        criteria_json = trial.eligibility_criteria.model_dump_json() if trial.eligibility_criteria else None
         embedding_bytes: bytes | None = None
         if trial.embedding:
             embedding_bytes = np.array(trial.embedding, dtype=np.float32).tobytes()
             self._embeddings.add(trial.nct_id, np.array(trial.embedding, dtype=np.float32))
 
-        self._db.upsert_trial({
-            "nct_id": trial.nct_id,
-            "title": trial.title,
-            "brief_summary": trial.brief_summary,
-            "conditions": json.dumps(trial.conditions),
-            "interventions": json.dumps(trial.interventions),
-            "phase": trial.phase,
-            "status": trial.status.value,
-            "eligibility_text": trial.eligibility_text,
-            "eligibility_criteria": criteria_json,
-            "sponsor": trial.sponsor,
-            "locations": json.dumps(trial.locations),
-            "start_date": trial.start_date.isoformat() if trial.start_date else None,
-            "last_updated": trial.last_updated.isoformat() if trial.last_updated else None,
-            "cached_at": trial.cached_at or time.time(),
-            "embedding": embedding_bytes,
-        })
+        self._db.upsert_trial(
+            {
+                "nct_id": trial.nct_id,
+                "title": trial.title,
+                "brief_summary": trial.brief_summary,
+                "conditions": json.dumps(trial.conditions),
+                "interventions": json.dumps(trial.interventions),
+                "phase": trial.phase,
+                "status": trial.status.value,
+                "eligibility_text": trial.eligibility_text,
+                "eligibility_criteria": criteria_json,
+                "sponsor": trial.sponsor,
+                "locations": json.dumps(trial.locations),
+                "start_date": trial.start_date.isoformat() if trial.start_date else None,
+                "last_updated": trial.last_updated.isoformat() if trial.last_updated else None,
+                "cached_at": trial.cached_at or time.time(),
+                "embedding": embedding_bytes,
+            }
+        )
 
     def save_raw(self, raw: dict[str, Any], criteria: EligibilityCriteria | None, embedding: np.ndarray | None) -> None:
         """Save a raw normalized dict from the fetcher directly."""
@@ -93,6 +92,7 @@ class TrialRepository:
                 criteria = None
 
         from datetime import date
+
         def _parse_date(v: str | None) -> date | None:
             if not v:
                 return None

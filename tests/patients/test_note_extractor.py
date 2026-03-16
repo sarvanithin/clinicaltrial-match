@@ -1,10 +1,10 @@
 """Tests for clinical note extractor."""
+
 from __future__ import annotations
 
 import pytest
 
 from clinicaltrial_match.patients.note_extractor import NoteExtractor, _chunk_text, _merge_results
-
 
 SAMPLE_NOTE = (
     "Patient is a 52-year-old male with a history of type 2 diabetes mellitus "
@@ -27,8 +27,24 @@ def test_chunk_text_splits_long():
 
 
 def test_merge_results_deduplicates():
-    r1 = {"age_years": 52, "gender": "male", "diagnoses": [{"name": "Diabetes", "status": "active"}], "medications": [], "lab_values": [], "procedures": [], "clinical_summary": "A"}
-    r2 = {"age_years": None, "gender": "unknown", "diagnoses": [{"name": "Diabetes", "status": "active"}], "medications": [{"name": "Metformin", "active": True}], "lab_values": [], "procedures": [], "clinical_summary": "B"}
+    r1 = {
+        "age_years": 52,
+        "gender": "male",
+        "diagnoses": [{"name": "Diabetes", "status": "active"}],
+        "medications": [],
+        "lab_values": [],
+        "procedures": [],
+        "clinical_summary": "A",
+    }
+    r2 = {
+        "age_years": None,
+        "gender": "unknown",
+        "diagnoses": [{"name": "Diabetes", "status": "active"}],
+        "medications": [{"name": "Metformin", "active": True}],
+        "lab_values": [],
+        "procedures": [],
+        "clinical_summary": "B",
+    }
     merged = _merge_results([r1, r2])
     assert merged["age_years"] == 52
     assert merged["gender"] == "male"

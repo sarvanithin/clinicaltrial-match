@@ -1,4 +1,5 @@
 """Tests for the trial repository."""
+
 from __future__ import annotations
 
 import time
@@ -34,18 +35,22 @@ def test_get_nonexistent_returns_none(in_memory_db, mock_embeddings):
 def test_list_trials_with_status_filter(in_memory_db, mock_embeddings):
     repo = TrialRepository(in_memory_db, mock_embeddings)
     for i in range(3):
-        repo.save(Trial(
-            nct_id=f"NCT0000000{i}",
-            title=f"Trial {i}",
-            status=TrialStatus.RECRUITING,
+        repo.save(
+            Trial(
+                nct_id=f"NCT0000000{i}",
+                title=f"Trial {i}",
+                status=TrialStatus.RECRUITING,
+                cached_at=time.time(),
+            )
+        )
+    repo.save(
+        Trial(
+            nct_id="NCT00000099",
+            title="Completed Trial",
+            status=TrialStatus.COMPLETED,
             cached_at=time.time(),
-        ))
-    repo.save(Trial(
-        nct_id="NCT00000099",
-        title="Completed Trial",
-        status=TrialStatus.COMPLETED,
-        cached_at=time.time(),
-    ))
+        )
+    )
     trials, total = repo.list(status="RECRUITING")
     assert total == 3
     assert all(t.status == TrialStatus.RECRUITING for t in trials)
@@ -60,12 +65,14 @@ def test_count_trials(in_memory_db, mock_embeddings):
 
 def test_eligibility_criteria_round_trips(in_memory_db, mock_embeddings, sample_criteria):
     repo = TrialRepository(in_memory_db, mock_embeddings)
-    repo.save(Trial(
-        nct_id="NCT00000001",
-        title="Trial",
-        eligibility_criteria=sample_criteria,
-        cached_at=time.time(),
-    ))
+    repo.save(
+        Trial(
+            nct_id="NCT00000001",
+            title="Trial",
+            eligibility_criteria=sample_criteria,
+            cached_at=time.time(),
+        )
+    )
     retrieved = repo.get("NCT00000001")
     assert retrieved is not None
     assert retrieved.eligibility_criteria is not None

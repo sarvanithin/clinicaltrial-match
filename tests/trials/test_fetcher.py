@@ -1,4 +1,5 @@
 """Tests for trial fetcher normalization."""
+
 from __future__ import annotations
 
 from clinicaltrial_match.trials.fetcher import _parse_age_string, normalize_study

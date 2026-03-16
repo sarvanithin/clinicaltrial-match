@@ -7,6 +7,7 @@ Two-stage approach:
 
 Falls back to regex-only results if Claude call fails or returns low confidence.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -119,12 +120,6 @@ def _split_inclusion_exclusion(text: str) -> tuple[str, str]:
 
 
 def _regex_parse_age(text: str) -> AgeConstraint | None:
-    patterns = [
-        re.compile(r"(?:minimum\s+age|at\s+least|>=?)\s*:?\s*(\d+)\s*(?:years?|yrs?)", re.IGNORECASE),
-        re.compile(r"(\d+)\s*(?:years?|yrs?)\s+(?:of\s+age\s+)?(?:or\s+)?older", re.IGNORECASE),
-        re.compile(r"(?:maximum\s+age|no\s+more\s+than|<=?)\s*:?\s*(\d+)\s*(?:years?|yrs?)", re.IGNORECASE),
-        re.compile(r"(?:between|aged?)\s+(\d+)\s*(?:and|to|-)\s*(\d+)\s*(?:years?|yrs?)", re.IGNORECASE),
-    ]
     min_age: float | None = None
     max_age: float | None = None
 
@@ -190,10 +185,7 @@ class EligibilityParser:
                 result = await self._claude.tool_use(
                     model=self._claude.fast_model,
                     system=_SYSTEM_PROMPT,
-                    user_message=(
-                        f"Inclusion Criteria:\n{inclusion_text}\n\n"
-                        f"Exclusion Criteria:\n{exclusion_text}"
-                    ),
+                    user_message=(f"Inclusion Criteria:\n{inclusion_text}\n\nExclusion Criteria:\n{exclusion_text}"),
                     tools=[_EXTRACTION_TOOL],
                     tool_name="extract_eligibility_criteria",
                 )
@@ -205,9 +197,7 @@ class EligibilityParser:
         return criteria
 
 
-def _apply_claude_result(
-    criteria: EligibilityCriteria, result: dict[str, Any]
-) -> EligibilityCriteria:
+def _apply_claude_result(criteria: EligibilityCriteria, result: dict[str, Any]) -> EligibilityCriteria:
     diagnoses = DiagnosisConstraint(
         required_conditions=result.get("required_diagnoses", []),
         excluded_conditions=result.get("excluded_diagnoses", []),

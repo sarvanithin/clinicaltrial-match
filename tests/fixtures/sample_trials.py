@@ -1,6 +1,6 @@
 """Synthetic ClinicalTrials.gov v2 API response fixtures."""
-from __future__ import annotations
 
+from __future__ import annotations
 
 SAMPLE_STUDY_RAW = {
     "protocolSection": {
@@ -13,15 +13,9 @@ SAMPLE_STUDY_RAW = {
             "lastUpdatePostDateStruct": {"date": "2025-01-15"},
             "startDateStruct": {"date": "2024-06-01"},
         },
-        "descriptionModule": {
-            "briefSummary": "A randomized trial evaluating metformin efficacy in adults with T2DM."
-        },
-        "conditionsModule": {
-            "conditions": ["Type 2 Diabetes Mellitus"]
-        },
-        "armsInterventionsModule": {
-            "interventions": [{"name": "Metformin"}, {"name": "Placebo"}]
-        },
+        "descriptionModule": {"briefSummary": "A randomized trial evaluating metformin efficacy in adults with T2DM."},
+        "conditionsModule": {"conditions": ["Type 2 Diabetes Mellitus"]},
+        "armsInterventionsModule": {"interventions": [{"name": "Metformin"}, {"name": "Placebo"}]},
         "eligibilityModule": {
             "eligibilityCriteria": (
                 "Inclusion Criteria:\n"
@@ -37,12 +31,8 @@ SAMPLE_STUDY_RAW = {
             "minimumAge": "18 Years",
             "maximumAge": "75 Years",
         },
-        "sponsorCollaboratorsModule": {
-            "leadSponsor": {"name": "University Medical Center"}
-        },
-        "contactsLocationsModule": {
-            "locations": [{"facility": "University Hospital"}]
-        },
+        "sponsorCollaboratorsModule": {"leadSponsor": {"name": "University Medical Center"}},
+        "contactsLocationsModule": {"locations": [{"facility": "University Hospital"}]},
         "designModule": {"phases": ["PHASE3"]},
     }
 }

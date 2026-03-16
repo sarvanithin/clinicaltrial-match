@@ -1,4 +1,5 @@
 """Pydantic v2 request/response schemas for the API layer."""
+
 from __future__ import annotations
 
 from typing import Any

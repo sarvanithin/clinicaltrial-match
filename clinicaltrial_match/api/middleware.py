@@ -3,6 +3,7 @@
 If CTM_AUTH__API_KEY env var is set, all /v1/* requests must include
 X-API-Key header matching that value. If not set, auth is disabled (dev mode).
 """
+
 from __future__ import annotations
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -10,13 +11,15 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
-_SKIP_PATHS = frozenset([
-    "/",
-    "/docs",
-    "/redoc",
-    "/openapi.json",
-    "/v1/health",
-])
+_SKIP_PATHS = frozenset(
+    [
+        "/",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/v1/health",
+    ]
+)
 
 _SKIP_PREFIXES = ("/ui",)
 

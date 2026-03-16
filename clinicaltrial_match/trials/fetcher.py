@@ -4,28 +4,44 @@ Async ClinicalTrials.gov API v2 client with pagination.
 Fetches trials by condition query, handles pagination via pageToken,
 and normalizes the deeply-nested v2 response into Trial dicts.
 """
+
 from __future__ import annotations
 
 import re
 import time
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 import structlog
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from clinicaltrial_match.config import TrialsConfig
-from clinicaltrial_match.trials.models import Trial, TrialStatus
+from clinicaltrial_match.trials.models import TrialStatus
 
 _logger = structlog.get_logger()
 
 
-_FIELDS = ",".join([
-    "NCTId", "BriefTitle", "BriefSummary", "Condition", "InterventionName",
-    "Phase", "OverallStatus", "EligibilityCriteria", "Sex", "MinimumAge", "MaximumAge",
-    "LeadSponsorName", "LocationFacility", "StartDate",
-    "PrimaryCompletionDate", "LastUpdatePostDate",
-])
+_FIELDS = ",".join(
+    [
+        "NCTId",
+        "BriefTitle",
+        "BriefSummary",
+        "Condition",
+        "InterventionName",
+        "Phase",
+        "OverallStatus",
+        "EligibilityCriteria",
+        "Sex",
+        "MinimumAge",
+        "MaximumAge",
+        "LeadSponsorName",
+        "LocationFacility",
+        "StartDate",
+        "PrimaryCompletionDate",
+        "LastUpdatePostDate",
+    ]
+)
 
 _STATUS_MAP: dict[str, TrialStatus] = {
     "RECRUITING": TrialStatus.RECRUITING,
@@ -97,15 +113,10 @@ def normalize_study(study: dict[str, Any]) -> dict[str, Any]:
     min_age = _parse_age_string(elig_mod.get("minimumAge"))
     max_age = _parse_age_string(elig_mod.get("maximumAge"))
 
-    locations = list({
-        loc.get("facility", "")
-        for loc in contacts_mod.get("locations", [])
-        if loc.get("facility")
-    })
+    locations = list({loc.get("facility", "") for loc in contacts_mod.get("locations", []) if loc.get("facility")})
 
     last_updated_raw = status_mod.get("lastUpdatePostDateStruct", {}).get("date", "")
     start_date_raw = status_mod.get("startDateStruct", {}).get("date", "")
-    primary_comp_raw = status_mod.get("primaryCompletionDateStruct", {}).get("date", "")
 
     return {
         "nct_id": nct_id,
@@ -136,9 +147,7 @@ class TrialFetcher:
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=2, max=60),
-        retry=retry_if_exception_type(
-            (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError)
-        ),
+        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError)),
         before_sleep=lambda retry_state: _logger.warning(
             "fetcher_retry",
             attempt=retry_state.attempt_number,

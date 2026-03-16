@@ -1,4 +1,5 @@
 """Domain models for clinical trials."""
+
 from __future__ import annotations
 
 from datetime import date

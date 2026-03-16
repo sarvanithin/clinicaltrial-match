@@ -3,6 +3,7 @@ Semantic similarity search using the in-memory EmbeddingIndex.
 
 Computes patient query vector and searches the trial index.
 """
+
 from __future__ import annotations
 
 from clinicaltrial_match.infrastructure.embeddings import EmbeddingIndex

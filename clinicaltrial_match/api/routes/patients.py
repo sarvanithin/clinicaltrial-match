@@ -1,4 +1,5 @@
 """Patients routes: GET /v1/patients, POST /v1/patients/fhir, POST /v1/patients/note"""
+
 from __future__ import annotations
 
 import json

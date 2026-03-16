@@ -1,4 +1,5 @@
 """Tests for eligibility criteria parser."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,7 +10,6 @@ from clinicaltrial_match.trials.parser import (
     _regex_parse_gender,
     _split_inclusion_exclusion,
 )
-
 
 SAMPLE_CRITERIA_TEXT = (
     "Inclusion Criteria:\n"

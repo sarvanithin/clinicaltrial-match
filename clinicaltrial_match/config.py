@@ -9,6 +9,7 @@ Example env overrides:
     CTM_CLAUDE__FAST_MODEL=claude-haiku-4-5-20251001
     CTM_EMBEDDING__USE_FAISS=true
 """
+
 from __future__ import annotations
 
 import json
@@ -93,6 +94,7 @@ class CTMConfig(BaseSettings):
 
 def _default_config_path() -> Path:
     import os
+
     env_path = os.environ.get("CTM_CONFIG")
     if env_path:
         return Path(env_path)
