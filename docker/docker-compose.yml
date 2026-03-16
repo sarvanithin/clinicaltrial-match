@@ -1,0 +1,24 @@
+services:
+  clinicaltrial-match:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CTM_CLAUDE__FAST_MODEL: ${CTM_FAST_MODEL:-claude-haiku-4-5-20251001}
+      CTM_CLAUDE__REASONING_MODEL: ${CTM_REASONING_MODEL:-claude-sonnet-4-6-20251101}
+      CTM_API__LOG_LEVEL: "INFO"
+    volumes:
+      - ctm_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  ctm_data:
