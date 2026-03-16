@@ -239,6 +239,57 @@ class Database:
         row = self.conn.execute("SELECT * FROM sync_jobs WHERE job_id=?", (job_id,)).fetchone()
         return dict(row) if row else None
 
+    def list_sync_jobs(self, limit: int = 10) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM sync_jobs ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    # --- Patients (list) ---
+
+    def list_patients(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[dict[str, Any]], int]:
+        total = self.conn.execute("SELECT COUNT(*) FROM patients").fetchone()[0]
+        rows = self.conn.execute(
+            "SELECT * FROM patients ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+        return [dict(r) for r in rows], total
+
+    # --- Match Results (by patient) ---
+
+    def list_match_results_by_patient(
+        self,
+        patient_id: str,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT * FROM match_results WHERE patient_id=? ORDER BY created_at DESC LIMIT ?",
+            (patient_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    # --- Conditions autocomplete ---
+
+    def get_all_conditions(self) -> list[str]:
+        rows = self.conn.execute("SELECT conditions FROM trials WHERE conditions IS NOT NULL").fetchall()
+        seen: set[str] = set()
+        result: list[str] = []
+        for row in rows:
+            try:
+                import json as _json
+                conds = _json.loads(row["conditions"])
+                for c in conds:
+                    if isinstance(c, str) and c and c not in seen:
+                        seen.add(c)
+                        result.append(c)
+            except Exception:
+                pass
+        return result
+
     # --- Diagnosis Equivalence Cache ---
 
     def get_diagnosis_equiv(self, cache_key: str) -> bool | None:

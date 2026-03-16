@@ -44,6 +44,35 @@ def _assign_tier(
     return "low", "ineligible"
 
 
+def _hard_failure_sentence(result: ConstraintResult) -> str:
+    """Return a plain-English explanation for a hard constraint failure."""
+    c = result.criterion.lower()
+    val = result.patient_value or "unknown"
+    if c.startswith("age"):
+        return (
+            f"Patient age ({val}) does not meet the trial age requirement "
+            f"— {result.reason}"
+        )
+    if c.startswith("gender"):
+        return (
+            f"Patient gender ({val}) does not match the trial gender restriction "
+            f"— {result.reason}"
+        )
+    if c.startswith("no diagnosis"):
+        condition = result.criterion.split("no diagnosis", 1)[-1].strip(" :")
+        return (
+            f"Patient has an excluded diagnosis ({condition or val}) "
+            f"that disqualifies them from this trial — {result.reason}"
+        )
+    if c.startswith("not on medication"):
+        med = result.criterion.split("not on medication", 1)[-1].strip(" :")
+        return (
+            f"Patient is on a prohibited medication ({med or val}) "
+            f"that disqualifies them from this trial — {result.reason}"
+        )
+    return result.reason
+
+
 def build_match_result(
     match_id: str,
     patient_id: str,
@@ -67,8 +96,12 @@ def build_match_result(
         top_factors.append(f"strong semantic match (score={semantic_score:.2f})")
     top_factors.extend(r.criterion for r in passed[:3])
 
-    disqualifying = [r.reason for r in failed if _is_hard_constraint(r)]
-    disqualifying += [r.reason for r in failed if not _is_hard_constraint(r)]
+    disqualifying: list[str] = []
+    for r in failed:
+        if _is_hard_constraint(r):
+            disqualifying.append(_hard_failure_sentence(r))
+        else:
+            disqualifying.append(r.reason)
 
     explanation = MatchExplanation(
         semantic_score=round(semantic_score, 4),

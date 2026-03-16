@@ -4,12 +4,17 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      - "8000:8000"
+      - "${CTM_PORT:-8000}:8000"
     environment:
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY is required}
       CTM_CLAUDE__FAST_MODEL: ${CTM_FAST_MODEL:-claude-haiku-4-5-20251001}
       CTM_CLAUDE__REASONING_MODEL: ${CTM_REASONING_MODEL:-claude-sonnet-4-6-20251101}
-      CTM_API__LOG_LEVEL: "INFO"
+      CTM_DB__PATH: /data/ctm.db
+      CTM_API__LOG_LEVEL: ${CTM_LOG_LEVEL:-INFO}
+      CTM_API__CORS_ORIGINS: ${CTM_CORS_ORIGINS:-["*"]}
+      CTM_AUTH__API_KEY: ${CTM_AUTH__API_KEY:-}
+      CTM_TRIALS__MAX_TRIALS_PER_SYNC: ${CTM_MAX_TRIALS:-1000}
+      CTM_EMBEDDING__USE_FAISS: ${CTM_USE_FAISS:-false}
     volumes:
       - ctm_data:/data
     restart: unless-stopped
@@ -18,7 +23,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
 volumes:
   ctm_data:
+    driver: local

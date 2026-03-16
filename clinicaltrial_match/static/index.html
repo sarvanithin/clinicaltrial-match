@@ -18,7 +18,7 @@
   </script>
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
-    .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+    .tab-active   { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #6b7280; }
     .badge-recruiting  { background:#dcfce7; color:#166534; }
     .badge-completed   { background:#f3f4f6; color:#374151; }
@@ -37,6 +37,10 @@
     .nav-link { transition: all 0.15s; }
     .nav-link:hover { background: rgba(255,255,255,0.12); }
     .nav-link.active { background: rgba(255,255,255,0.2); }
+    .drawer-enter { animation: drawerIn 0.25s ease; }
+    @keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -66,12 +70,11 @@
 
 <div class="max-w-7xl mx-auto px-6 py-8">
 
-  <!-- ── DASHBOARD ─────────────────────────────────────── -->
+  <!-- ── DASHBOARD ─────────────────────────────────────────────── -->
   <section id="section-dashboard" class="fade-in">
     <h1 class="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
     <p class="text-gray-500 text-sm mb-6">AI-powered clinical trial matching from patient records</p>
 
-    <!-- stat cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
         <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Trials Cached</p>
@@ -91,7 +94,6 @@
       </div>
     </div>
 
-    <!-- dependencies -->
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
       <h2 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Dependencies</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="dep-grid">
@@ -99,7 +101,6 @@
       </div>
     </div>
 
-    <!-- quick actions -->
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
       <h2 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Quick Start</h2>
       <div class="grid md:grid-cols-3 gap-4">
@@ -128,7 +129,7 @@
     </div>
   </section>
 
-  <!-- ── TRIALS ─────────────────────────────────────────── -->
+  <!-- ── TRIALS ────────────────────────────────────────────────── -->
   <section id="section-trials" class="fade-in hidden">
     <h1 class="text-2xl font-bold text-gray-900 mb-1">Clinical Trials</h1>
     <p class="text-gray-500 text-sm mb-6">Sync and browse trials from ClinicalTrials.gov</p>
@@ -137,10 +138,15 @@
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
       <h2 class="font-semibold text-gray-800 mb-4">Sync Trials</h2>
       <div class="flex gap-3 flex-wrap">
-        <input id="sync-condition" type="text" placeholder="Condition (e.g. type 2 diabetes)"
-          class="flex-1 min-w-48 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" value="type 2 diabetes"/>
-        <input id="sync-max" type="number" placeholder="Max trials" value="20" min="1" max="200"
-          class="w-32 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+        <div class="flex-1 min-w-48 relative">
+          <input id="sync-condition" list="sync-condition-suggestions" type="text"
+            placeholder="Condition (e.g. type 2 diabetes)"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+            value="type 2 diabetes" oninput="fetchAutocompleteSuggestions(this.value, 'sync-condition-suggestions')"/>
+          <datalist id="sync-condition-suggestions"></datalist>
+        </div>
+        <input id="sync-max" type="number" placeholder="Max" value="20" min="1" max="200"
+          class="w-24 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
         <button onclick="syncTrials()" id="sync-btn"
           class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -161,11 +167,24 @@
       </div>
     </div>
 
+    <!-- recent sync jobs -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-700">Recent Sync Jobs</h2>
+        <button onclick="loadSyncJobs()" class="text-xs text-brand-600 hover:underline">Refresh</button>
+      </div>
+      <div id="sync-jobs-list" class="text-xs text-gray-400">Loading…</div>
+    </div>
+
     <!-- filter bar -->
     <div class="flex gap-3 mb-4 flex-wrap items-center">
-      <input id="trial-filter-condition" type="text" placeholder="Filter by condition…"
-        class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        oninput="loadTrials()"/>
+      <div class="relative">
+        <input id="trial-filter-condition" list="filter-condition-suggestions" type="text"
+          placeholder="Filter by condition…"
+          class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          oninput="loadTrials(); fetchAutocompleteSuggestions(this.value, 'filter-condition-suggestions')"/>
+        <datalist id="filter-condition-suggestions"></datalist>
+      </div>
       <select id="trial-filter-status" onchange="loadTrials()"
         class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
         <option value="">All statuses</option>
@@ -177,25 +196,39 @@
       <span class="ml-auto text-xs text-gray-400" id="trials-count"></span>
     </div>
 
-    <!-- trials list -->
     <div id="trials-list" class="space-y-3"></div>
   </section>
 
-  <!-- ── PATIENTS ───────────────────────────────────────── -->
+  <!-- ── PATIENTS ───────────────────────────────────────────────── -->
   <section id="section-patients" class="fade-in hidden">
     <h1 class="text-2xl font-bold text-gray-900 mb-1">Patients</h1>
-    <p class="text-gray-500 text-sm mb-6">Ingest patient records for matching</p>
+    <p class="text-gray-500 text-sm mb-6">Browse and ingest patient records</p>
 
-    <!-- tabs -->
     <div class="flex gap-0 border-b border-gray-200 mb-6">
-      <button onclick="switchPatientTab('fhir')" id="ptab-fhir"
-        class="px-5 py-3 text-sm tab-active">FHIR R4 Bundle</button>
-      <button onclick="switchPatientTab('note')" id="ptab-note"
-        class="px-5 py-3 text-sm tab-inactive">Clinical Note</button>
+      <button onclick="switchPatientTab('list')" id="ptab-list" class="px-5 py-3 text-sm tab-active">Patient List</button>
+      <button onclick="switchPatientTab('fhir')" id="ptab-fhir" class="px-5 py-3 text-sm tab-inactive">FHIR R4 Bundle</button>
+      <button onclick="switchPatientTab('note')" id="ptab-note" class="px-5 py-3 text-sm tab-inactive">Clinical Note</button>
+    </div>
+
+    <!-- Patient List tab -->
+    <div id="ptab-list-content">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-sm text-gray-500" id="patients-count"></span>
+        <button onclick="loadPatientList()" class="text-xs text-brand-600 hover:underline">Refresh</button>
+      </div>
+      <div id="patients-list" class="space-y-3">
+        <div class="text-gray-400 text-sm py-4">Loading…</div>
+      </div>
+      <div class="flex gap-3 mt-4 items-center" id="patients-pagination">
+        <button id="patients-prev" onclick="loadPatientList(patientOffset-20)" disabled
+          class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40">← Prev</button>
+        <button id="patients-next" onclick="loadPatientList(patientOffset+20)"
+          class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40">Next →</button>
+      </div>
     </div>
 
     <!-- FHIR tab -->
-    <div id="ptab-fhir-content">
+    <div id="ptab-fhir-content" class="hidden">
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
         <div class="flex justify-between items-center mb-3">
           <h2 class="font-semibold text-gray-800 text-sm">FHIR R4 JSON Bundle</h2>
@@ -230,56 +263,85 @@
       </div>
     </div>
 
-    <!-- patient result -->
     <div id="patient-result" class="mt-6 hidden"></div>
   </section>
 
-  <!-- ── MATCH ──────────────────────────────────────────── -->
+  <!-- ── MATCH ─────────────────────────────────────────────────── -->
   <section id="section-match" class="fade-in hidden">
     <h1 class="text-2xl font-bold text-gray-900 mb-1">Match Patient to Trials</h1>
-    <p class="text-gray-500 text-sm mb-6">Find eligible clinical trials for a patient using AI-powered matching</p>
+    <p class="text-gray-500 text-sm mb-6">Find eligible clinical trials using AI-powered matching</p>
 
-    <!-- match form -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-      <div class="grid md:grid-cols-3 gap-4">
-        <div class="md:col-span-2">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Patient ID</label>
-          <input id="match-patient-id" type="text" placeholder="e.g. demo-patient-001"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+    <div class="flex gap-0 border-b border-gray-200 mb-6">
+      <button onclick="switchMatchTab('match')" id="mtab-match" class="px-5 py-3 text-sm tab-active">Run Match</button>
+      <button onclick="switchMatchTab('history')" id="mtab-history" class="px-5 py-3 text-sm tab-inactive">History</button>
+    </div>
+
+    <!-- Match tab -->
+    <div id="mtab-match-content">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Patient ID</label>
+            <input id="match-patient-id" type="text" placeholder="e.g. demo-patient-001"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Max Results</label>
+            <input id="match-max" type="number" value="10" min="1" max="50"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Min Score</label>
+            <input id="match-min-score" type="number" value="0.2" min="0" max="1" step="0.05"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Status Filter</label>
+            <select id="match-status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="RECRUITING">Recruiting Only</option>
+              <option value="">All Statuses</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button onclick="runMatch()" id="match-btn"
+              class="w-full bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              Find Matches
+            </button>
+          </div>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Max Results</label>
-          <input id="match-max" type="number" value="10" min="1" max="50"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Min Score</label>
-          <input id="match-min-score" type="number" value="0.2" min="0" max="1" step="0.05"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Status Filter</label>
-          <select id="match-status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-            <option value="RECRUITING">Recruiting Only</option>
-            <option value="">All Statuses</option>
-          </select>
-        </div>
-        <div class="flex items-end">
-          <button onclick="runMatch()" id="match-btn"
-            class="w-full bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            Find Matches
+        <p class="text-xs text-gray-400 mt-3">Ingest a patient first, then paste their Patient ID here.</p>
+      </div>
+      <div id="match-results"></div>
+    </div>
+
+    <!-- History tab -->
+    <div id="mtab-history-content" class="hidden">
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+        <div class="flex gap-3">
+          <input id="history-patient-id" type="text" placeholder="Patient ID"
+            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          <button onclick="loadMatchHistory()" id="history-btn"
+            class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
+            Load History
           </button>
         </div>
       </div>
-      <p class="text-xs text-gray-400 mt-3">💡 Ingest a patient first, then paste their Patient ID here.</p>
+      <div id="match-history-results"></div>
     </div>
-
-    <!-- match results -->
-    <div id="match-results"></div>
   </section>
 
 </div><!-- /max-w-7xl -->
+
+<!-- TRIAL DETAIL DRAWER -->
+<div id="drawer-overlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden" onclick="closeDrawer()"></div>
+<div id="trial-drawer" class="fixed inset-y-0 right-0 w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl z-50 hidden flex flex-col">
+  <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <h2 class="font-bold text-gray-900 text-base" id="drawer-title">Trial Details</h2>
+    <button onclick="closeDrawer()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+  </div>
+  <div id="drawer-content" class="flex-1 overflow-y-auto p-6 text-sm"></div>
+</div>
 
 <!-- TOAST -->
 <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
@@ -287,9 +349,11 @@
 </div>
 
 <script>
-const API = '';  // same origin
+const API = '';
+let patientOffset = 0;
+let _conditionCache = [];
 
-// ── Utils ──────────────────────────────────────────────────
+// ── Utils ───────────────────────────────────────────────────────────
 function toast(msg, dur=3000) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
@@ -305,11 +369,11 @@ function setLoading(btnId, loading) {
 }
 
 function badgeHtml(text, cls) {
-  return `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${text}</span>`;
+  return `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${escHtml(text)}</span>`;
 }
 
 function scoreBar(score) {
-  const pct = Math.round(score * 100);
+  const pct = Math.round((score || 0) * 100);
   const color = score >= 0.7 ? 'bg-green-500' : score >= 0.5 ? 'bg-yellow-500' : 'bg-orange-400';
   return `
     <div class="flex items-center gap-2">
@@ -320,7 +384,16 @@ function scoreBar(score) {
     </div>`;
 }
 
-// ── Navigation ─────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleString();
+}
+
+// ── Navigation ──────────────────────────────────────────────────────
 function showSection(name) {
   ['dashboard','trials','patients','match'].forEach(s => {
     document.getElementById('section-'+s).classList.toggle('hidden', s !== name);
@@ -328,10 +401,11 @@ function showSection(name) {
     btn.classList.toggle('active', s === name);
   });
   if (name === 'dashboard') loadHealth();
-  if (name === 'trials') loadTrials();
+  if (name === 'trials') { loadTrials(); loadSyncJobs(); loadAllConditions(); }
+  if (name === 'patients') loadPatientList();
 }
 
-// ── Health / Dashboard ─────────────────────────────────────
+// ── Health / Dashboard ──────────────────────────────────────────────
 async function loadHealth() {
   try {
     const r = await fetch(API + '/v1/health');
@@ -380,7 +454,32 @@ function fmtUptime(s) {
   return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
 }
 
-// ── Trials ─────────────────────────────────────────────────
+// ── Autocomplete ────────────────────────────────────────────────────
+async function loadAllConditions() {
+  try {
+    const r = await fetch(API + '/v1/trials/autocomplete?q=');
+    const d = await r.json();
+    _conditionCache = d.suggestions || [];
+  } catch(_) {}
+}
+
+async function fetchAutocompleteSuggestions(q, datalistId) {
+  const dl = document.getElementById(datalistId);
+  if (!dl) return;
+  try {
+    const r = await fetch(API + '/v1/trials/autocomplete?q=' + encodeURIComponent(q));
+    const d = await r.json();
+    dl.innerHTML = (d.suggestions || []).map(s => `<option value="${escHtml(s)}">`).join('');
+  } catch(_) {
+    dl.innerHTML = _conditionCache
+      .filter(s => s.toLowerCase().includes(q.toLowerCase()))
+      .slice(0, 10)
+      .map(s => `<option value="${escHtml(s)}">`)
+      .join('');
+  }
+}
+
+// ── Trials ──────────────────────────────────────────────────────────
 async function syncTrials() {
   const condition = document.getElementById('sync-condition').value.trim();
   const maxTrials = parseInt(document.getElementById('sync-max').value) || 20;
@@ -399,6 +498,7 @@ async function syncTrials() {
       body: JSON.stringify({ condition, max_trials: maxTrials, status_filter: ['RECRUITING','NOT_YET_RECRUITING','ACTIVE_NOT_RECRUITING'] })
     });
     const job = await r.json();
+    if (!r.ok) { toast('Sync error: ' + (job.detail || r.status)); setLoading('sync-btn',false); return; }
     pollSync(job.job_id, maxTrials);
   } catch(e) {
     toast('Sync failed: ' + e.message);
@@ -408,30 +508,49 @@ async function syncTrials() {
 
 async function pollSync(jobId, max) {
   const poll = async () => {
-    const r = await fetch(API+'/v1/trials/sync/'+jobId);
-    const d = await r.json();
-    const pct = max > 0 ? Math.min(95, Math.round((d.trials_fetched/max)*100)) : 50;
-    document.getElementById('sync-bar').style.width = pct + '%';
-    document.getElementById('sync-msg').textContent =
-      `${d.status} — fetched ${d.trials_fetched}, parsed ${d.trials_parsed}${d.error ? ' ⚠ '+d.error : ''}`;
+    try {
+      const r = await fetch(API+'/v1/trials/sync/'+jobId);
+      const d = await r.json();
+      const pct = max > 0 ? Math.min(95, Math.round((d.trials_fetched/max)*100)) : 50;
+      document.getElementById('sync-bar').style.width = pct + '%';
+      document.getElementById('sync-msg').textContent =
+        `${d.status} — fetched ${d.trials_fetched}, parsed ${d.trials_parsed}${d.error ? ' ⚠ '+d.error : ''}`;
 
-    if (d.status === 'completed') {
-      document.getElementById('sync-bar').style.width = '100%';
-      document.getElementById('sync-spinner').classList.add('hidden');
-      document.getElementById('sync-msg').textContent = `✓ Done — ${d.trials_fetched} trials synced`;
-      setLoading('sync-btn', false);
-      toast(`Synced ${d.trials_fetched} trials for "${document.getElementById('sync-condition').value}"`);
-      loadTrials();
-      loadHealth();
-    } else if (d.status === 'failed') {
-      document.getElementById('sync-spinner').classList.add('hidden');
-      document.getElementById('sync-msg').textContent = '✗ Failed: ' + (d.error || 'unknown error');
-      setLoading('sync-btn', false);
-    } else {
-      setTimeout(poll, 1500);
-    }
+      if (d.status === 'completed') {
+        document.getElementById('sync-bar').style.width = '100%';
+        document.getElementById('sync-spinner').classList.add('hidden');
+        document.getElementById('sync-msg').textContent = `✓ Done — ${d.trials_fetched} trials synced`;
+        setLoading('sync-btn', false);
+        toast(`Synced ${d.trials_fetched} trials`);
+        loadTrials(); loadHealth(); loadSyncJobs(); loadAllConditions();
+      } else if (d.status === 'failed') {
+        document.getElementById('sync-spinner').classList.add('hidden');
+        document.getElementById('sync-msg').textContent = '✗ Failed: ' + (d.error || 'unknown error');
+        setLoading('sync-btn', false);
+      } else {
+        setTimeout(poll, 1500);
+      }
+    } catch(_) { setTimeout(poll, 3000); }
   };
   poll();
+}
+
+async function loadSyncJobs() {
+  const el = document.getElementById('sync-jobs-list');
+  if (!el) return;
+  try {
+    const r = await fetch(API + '/v1/trials/sync?limit=5');
+    const d = await r.json();
+    if (!d.jobs || !d.jobs.length) { el.textContent = 'No sync jobs yet.'; return; }
+    el.innerHTML = '<div class="space-y-1">' + d.jobs.map(j => {
+      const statusColor = j.status === 'completed' ? 'text-green-600' : j.status === 'failed' ? 'text-red-600' : 'text-yellow-600';
+      return `<div class="flex items-center gap-3 py-1">
+        <span class="${statusColor} font-semibold w-20 shrink-0">${j.status}</span>
+        <span class="text-gray-700 flex-1 truncate">${escHtml(j.condition)}</span>
+        <span class="text-gray-400 shrink-0">${j.trials_fetched} fetched</span>
+      </div>`;
+    }).join('') + '</div>';
+  } catch(e) { el.textContent = 'Failed to load jobs.'; }
 }
 
 async function loadTrials() {
@@ -457,35 +576,156 @@ async function loadTrials() {
     list.innerHTML = d.trials.map(t => `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in">
         <div class="flex items-start justify-between gap-4 mb-2">
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="text-xs font-mono text-gray-400">${t.nct_id}</span>
+              <span class="text-xs font-mono text-gray-400">${escHtml(t.nct_id)}</span>
               ${badgeHtml(t.status, 'badge-recruiting')}
               ${t.phase ? badgeHtml(t.phase, 'bg-blue-50 text-blue-700') : ''}
             </div>
-            <h3 class="font-semibold text-gray-900 text-sm leading-tight">${t.title}</h3>
+            <h3 class="font-semibold text-gray-900 text-sm leading-tight">${escHtml(t.title)}</h3>
           </div>
-          <a href="https://clinicaltrials.gov/study/${t.nct_id}" target="_blank"
-            class="shrink-0 text-xs text-brand-600 hover:underline whitespace-nowrap">View ↗</a>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openTrialDrawer('${escHtml(t.nct_id)}')"
+              class="text-xs text-brand-600 border border-brand-200 hover:bg-brand-50 px-3 py-1 rounded-lg transition-colors">
+              Details
+            </button>
+            <a href="https://clinicaltrials.gov/study/${escHtml(t.nct_id)}" target="_blank"
+              class="text-xs text-gray-400 hover:underline">View ↗</a>
+          </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3 line-clamp-2">${t.brief_summary || 'No summary available.'}</p>
+        <p class="text-xs text-gray-500 mb-3 line-clamp-2">${escHtml(t.brief_summary || 'No summary available.')}</p>
         <div class="flex flex-wrap gap-2 text-xs">
-          ${t.conditions.slice(0,4).map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${c}</span>`).join('')}
+          ${t.conditions.slice(0,4).map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
         </div>
-        ${t.sponsor ? `<p class="text-xs text-gray-400 mt-2">Sponsor: ${t.sponsor}</p>` : ''}
+        ${t.sponsor ? `<p class="text-xs text-gray-400 mt-2">Sponsor: ${escHtml(t.sponsor)}</p>` : ''}
       </div>
     `).join('');
   } catch(e) {
-    list.innerHTML = `<div class="text-red-500 text-sm py-4">Error loading trials: ${e.message}</div>`;
+    list.innerHTML = `<div class="text-red-500 text-sm py-4">Error loading trials: ${escHtml(e.message)}</div>`;
   }
 }
 
-// ── Patients ───────────────────────────────────────────────
+// ── Trial Drawer ────────────────────────────────────────────────────
+async function openTrialDrawer(nctId) {
+  const drawer = document.getElementById('trial-drawer');
+  const overlay = document.getElementById('drawer-overlay');
+  const content = document.getElementById('drawer-content');
+  const title   = document.getElementById('drawer-title');
+
+  title.textContent = nctId;
+  content.innerHTML = '<div class="text-gray-400 py-8 text-center">Loading…</div>';
+  drawer.classList.remove('hidden');
+  drawer.classList.add('drawer-enter');
+  overlay.classList.remove('hidden');
+
+  try {
+    const r = await fetch(API + '/v1/trials?limit=1&condition=' + encodeURIComponent(nctId));
+    // Fetch the specific trial via the DB row — use a direct GET if available
+    // Fall back to listing and finding it
+    const d = await r.json();
+    const trial = d.trials && d.trials.find(t => t.nct_id === nctId);
+
+    if (!trial) {
+      content.innerHTML = '<p class="text-gray-400">Trial details not found.</p>';
+      return;
+    }
+
+    title.textContent = trial.nct_id;
+    content.innerHTML = `
+      <div class="mb-5">
+        <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Title</p>
+        <p class="font-semibold text-gray-900 leading-snug">${escHtml(trial.title)}</p>
+      </div>
+      <div class="flex flex-wrap gap-2 mb-5">
+        ${badgeHtml(trial.status, 'badge-recruiting')}
+        ${trial.phase ? badgeHtml(trial.phase, 'bg-blue-50 text-blue-700') : ''}
+        ${trial.sponsor ? `<span class="text-xs text-gray-500">Sponsor: ${escHtml(trial.sponsor)}</span>` : ''}
+      </div>
+      ${trial.brief_summary ? `
+        <div class="mb-5">
+          <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Summary</p>
+          <p class="text-sm text-gray-700 leading-relaxed">${escHtml(trial.brief_summary)}</p>
+        </div>` : ''}
+      ${trial.conditions.length ? `
+        <div class="mb-5">
+          <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Conditions</p>
+          <div class="flex flex-wrap gap-2">
+            ${trial.conditions.map(c => `<span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
+          </div>
+        </div>` : ''}
+      ${trial.locations && trial.locations.length ? `
+        <div class="mb-5">
+          <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Locations (${trial.locations.length})</p>
+          <div class="text-xs text-gray-700 space-y-0.5 max-h-28 overflow-y-auto">
+            ${trial.locations.map(l => `<p>${escHtml(l)}</p>`).join('')}
+          </div>
+        </div>` : ''}
+      <div class="flex gap-4 mt-6">
+        <a href="https://clinicaltrials.gov/study/${escHtml(trial.nct_id)}" target="_blank"
+          class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg transition-colors">
+          View on ClinicalTrials.gov ↗
+        </a>
+      </div>`;
+  } catch(e) {
+    content.innerHTML = `<p class="text-red-500">Error: ${escHtml(e.message)}</p>`;
+  }
+}
+
+function closeDrawer() {
+  document.getElementById('trial-drawer').classList.add('hidden');
+  document.getElementById('drawer-overlay').classList.add('hidden');
+}
+
+// ── Patients ────────────────────────────────────────────────────────
 function switchPatientTab(tab) {
-  ['fhir','note'].forEach(t => {
+  ['list','fhir','note'].forEach(t => {
     document.getElementById('ptab-'+t+'-content').classList.toggle('hidden', t !== tab);
     document.getElementById('ptab-'+t).className = `px-5 py-3 text-sm ${t===tab?'tab-active':'tab-inactive'}`;
   });
+  if (tab === 'list') loadPatientList(patientOffset);
+}
+
+async function loadPatientList(offset=0) {
+  patientOffset = offset;
+  const el = document.getElementById('patients-list');
+  const countEl = document.getElementById('patients-count');
+  el.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
+
+  try {
+    const r = await fetch(API + `/v1/patients?limit=20&offset=${offset}`);
+    const d = await r.json();
+    countEl.textContent = `${d.total} patient${d.total !== 1 ? 's' : ''} ingested`;
+
+    document.getElementById('patients-prev').disabled = offset <= 0;
+    document.getElementById('patients-next').disabled = offset + 20 >= d.total;
+
+    if (!d.patients.length) {
+      el.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No patients ingested yet. Use FHIR R4 Bundle or Clinical Note tabs to add patients.</div>';
+      return;
+    }
+
+    el.innerHTML = d.patients.map(p => `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span class="font-mono text-xs font-semibold text-brand-700">${escHtml(p.patient_id)}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${escHtml(p.source_type)}</span>
+              <span class="text-xs text-gray-400">${escHtml(p.gender || '—')}${p.age_years ? ' · ' + Math.round(p.age_years) + 'y' : ''}</span>
+            </div>
+            <p class="text-sm text-gray-700 line-clamp-2">${escHtml(p.clinical_summary || 'No summary')}</p>
+            <p class="text-xs text-gray-400 mt-1">Ingested ${fmtTs(p.created_at)}</p>
+          </div>
+          <button onclick="prefillMatch('${escHtml(p.patient_id)}')"
+            class="shrink-0 text-xs bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            → Match
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`;
+  }
 }
 
 function fillDemoFHIR() {
@@ -562,29 +802,29 @@ function showPatientResult(d) {
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-semibold text-gray-800">Patient Ingested</h2>
-        <button onclick="prefillMatch('${d.patient_id}')"
+        <button onclick="prefillMatch('${escHtml(d.patient_id)}')"
           class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg transition-colors">
           → Run Match
         </button>
       </div>
       <div class="grid md:grid-cols-2 gap-4">
         <div class="space-y-2">
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Patient ID</span><span class="font-mono font-semibold text-brand-700">${d.patient_id}</span></row>
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Age</span><span>${d.age_years ? Math.round(d.age_years) + ' years' : '—'}</span></row>
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Gender</span><span class="capitalize">${d.gender}</span></row>
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Diagnoses</span><span>${d.diagnoses_count}</span></row>
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Medications</span><span>${d.medications_count}</span></row>
-          <row class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Lab Values</span><span>${d.lab_values_count}</span></row>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Patient ID</span><span class="font-mono font-semibold text-brand-700">${escHtml(d.patient_id)}</span></div>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Age</span><span>${d.age_years ? Math.round(d.age_years) + ' years' : '—'}</span></div>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Gender</span><span class="capitalize">${escHtml(d.gender)}</span></div>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Diagnoses</span><span>${d.diagnoses_count}</span></div>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Medications</span><span>${d.medications_count}</span></div>
+          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Lab Values</span><span>${d.lab_values_count}</span></div>
         </div>
         <div>
           <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Clinical Summary</p>
-          <p class="text-sm text-gray-800 bg-gray-50 rounded-lg p-3">${d.clinical_summary}</p>
+          <p class="text-sm text-gray-800 bg-gray-50 rounded-lg p-3">${escHtml(d.clinical_summary)}</p>
           <div class="flex items-center gap-2 mt-3">
             <span class="text-xs text-gray-500">Extraction:</span>
-            <span class="text-xs font-medium text-gray-700">${d.extraction_method}</span>
+            <span class="text-xs font-medium text-gray-700">${escHtml(d.extraction_method)}</span>
             <span class="text-xs text-gray-400">(${Math.round(d.extraction_confidence*100)}% confidence)</span>
           </div>
-          ${d.warnings.length ? `<p class="text-xs text-yellow-600 mt-2">⚠ ${d.warnings.join(', ')}</p>` : ''}
+          ${d.warnings.length ? `<p class="text-xs text-yellow-600 mt-2">⚠ ${escHtml(d.warnings.join(', '))}</p>` : ''}
         </div>
       </div>
     </div>`;
@@ -592,10 +832,19 @@ function showPatientResult(d) {
 
 function prefillMatch(patientId) {
   document.getElementById('match-patient-id').value = patientId;
+  document.getElementById('history-patient-id').value = patientId;
   showSection('match');
+  switchMatchTab('match');
 }
 
-// ── Match ──────────────────────────────────────────────────
+// ── Match ────────────────────────────────────────────────────────────
+function switchMatchTab(tab) {
+  ['match','history'].forEach(t => {
+    document.getElementById('mtab-'+t+'-content').classList.toggle('hidden', t !== tab);
+    document.getElementById('mtab-'+t).className = `px-5 py-3 text-sm ${t===tab?'tab-active':'tab-inactive'}`;
+  });
+}
+
 async function runMatch() {
   const patientId = document.getElementById('match-patient-id').value.trim();
   if (!patientId) { toast('Enter a Patient ID'); return; }
@@ -624,103 +873,92 @@ async function runMatch() {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
     });
     const d = await r.json();
-    if (!r.ok) { results.innerHTML = `<div class="text-red-500 text-sm py-4">${d.detail || 'Error '+r.status}</div>`; return; }
-    renderMatchResults(d);
-  } catch(e) { results.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${e.message}</div>`; }
+    if (!r.ok) { results.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || 'Error '+r.status)}</div>`; return; }
+    renderMatchResults(d, results);
+  } catch(e) { results.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`; }
   finally { setLoading('match-btn', false); }
 }
 
-function renderMatchResults(d) {
-  const results = document.getElementById('match-results');
+function renderMatchResults(d, container) {
   if (!d.matches.length) {
-    results.innerHTML = `<div class="text-gray-400 text-sm py-8 text-center">No matches found above the minimum score threshold.</div>`;
+    container.innerHTML = `<div class="text-gray-400 text-sm py-8 text-center">No matches found above the minimum score threshold.</div>`;
     return;
   }
 
+  const exportBtn = `<button onclick="exportMatchCsv(window._lastMatchData)" class="text-xs border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    Export CSV
+  </button>`;
+
   const header = `
     <div class="flex items-center justify-between mb-4">
-      <p class="text-sm text-gray-600"><span class="font-semibold text-gray-900">${d.matches.length}</span> matches found in <span class="font-semibold">${d.processing_time_ms.toFixed(0)}ms</span></p>
-      <p class="text-xs text-gray-400">Patient: ${d.patient_id}</p>
+      <p class="text-sm text-gray-600"><span class="font-semibold text-gray-900">${d.matches.length}</span> matches in <span class="font-semibold">${d.processing_time_ms.toFixed(0)}ms</span> · Patient: <span class="font-mono text-xs text-brand-700">${escHtml(d.patient_id)}</span></p>
+      ${exportBtn}
     </div>`;
 
+  window._lastMatchData = d;
+
   const cards = d.matches.map((m, i) => {
-    const exp = m.explanation;
-    const statusBadge = {
-      eligible: 'badge-high',
-      likely_eligible: 'badge-medium',
-      potentially_eligible: 'badge-low',
-      ineligible: 'badge-ineligible'
-    }[m.status] || 'badge-low';
+    const exp = m.explanation || {};
+    const statusBadge = { eligible:'badge-high', likely_eligible:'badge-medium', potentially_eligible:'badge-low', ineligible:'badge-ineligible' }[m.status] || 'badge-low';
+    const confBadge   = { high:'badge-high', medium:'badge-medium', low:'badge-low' }[m.confidence] || 'badge-low';
+    const statusLabel = (m.status||'').replace(/_/g,' ');
 
-    const confBadge = { high:'badge-high', medium:'badge-medium', low:'badge-low' }[m.confidence] || 'badge-low';
-    const statusLabel = m.status.replace(/_/g,' ');
+    const passedHtml = (exp.passed_constraints||[]).slice(0,6).map(c =>
+      `<div class="constraint-pass bg-green-50 rounded px-3 py-2 text-xs text-gray-700">${escHtml(c.criterion)}</div>`
+    ).join('');
 
-    const passedHtml = exp.passed_constraints.slice(0,5).map(c => `
-      <div class="constraint-pass bg-green-50 rounded px-3 py-2 text-xs text-gray-700">${c.criterion}</div>
-    `).join('');
-
-    const failedHtml = exp.failed_constraints.slice(0,5).map(c => `
+    const failedHtml = (exp.failed_constraints||[]).slice(0,6).map(c => `
       <div class="constraint-fail bg-red-50 rounded px-3 py-2 text-xs text-gray-700">
-        <span class="font-medium">${c.criterion}</span>
-        <span class="block text-gray-500 mt-0.5">${c.reason}</span>
-      </div>
-    `).join('');
+        <span class="font-medium">${escHtml(c.criterion)}</span>
+        <span class="block text-gray-500 mt-0.5">${escHtml(c.reason||'')}</span>
+      </div>`).join('');
+
+    const disqualHtml = (exp.disqualifying_factors||[]).length ? `
+      <div class="mt-3 p-3 bg-red-50 rounded-lg">
+        <p class="text-xs font-semibold text-red-600 mb-1">Disqualifying Factors</p>
+        ${(exp.disqualifying_factors).map(f => `<p class="text-xs text-red-700">• ${escHtml(f)}</p>`).join('')}
+      </div>` : '';
 
     return `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in mb-4">
-        <!-- header row -->
         <div class="flex items-start gap-4 mb-4">
           <div class="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold text-sm shrink-0">${i+1}</div>
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap gap-2 items-center mb-1">
-              <span class="text-xs font-mono text-gray-400">${m.nct_id}</span>
+              <span class="text-xs font-mono text-gray-400">${escHtml(m.nct_id)}</span>
               ${badgeHtml(statusLabel, statusBadge)}
-              ${badgeHtml(m.confidence + ' confidence', confBadge)}
+              ${badgeHtml((m.confidence||'') + ' confidence', confBadge)}
             </div>
-            <h3 class="font-semibold text-gray-900 text-sm leading-snug">${m.trial_title}</h3>
+            <h3 class="font-semibold text-gray-900 text-sm leading-snug">${escHtml(m.trial_title||m.nct_id)}</h3>
           </div>
-          <a href="https://clinicaltrials.gov/study/${m.nct_id}" target="_blank"
+          <a href="https://clinicaltrials.gov/study/${escHtml(m.nct_id)}" target="_blank"
             class="shrink-0 text-xs text-brand-600 hover:underline">View ↗</a>
         </div>
 
-        <!-- score breakdown -->
         <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-          <div>
-            <p class="text-xs text-gray-500 mb-1">Composite Score</p>
-            ${scoreBar(exp.composite_score)}
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 mb-1">Semantic</p>
-            ${scoreBar(exp.semantic_score)}
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 mb-1">Constraints</p>
-            ${scoreBar(exp.constraint_score)}
-          </div>
+          <div><p class="text-xs text-gray-500 mb-1">Composite</p>${scoreBar(exp.composite_score)}</div>
+          <div><p class="text-xs text-gray-500 mb-1">Semantic</p>${scoreBar(exp.semantic_score)}</div>
+          <div><p class="text-xs text-gray-500 mb-1">Constraints</p>${scoreBar(exp.constraint_score)}</div>
         </div>
 
-        <!-- constraints toggle -->
-        <button onclick="toggleConstraints('${m.match_id}')" class="text-xs text-brand-600 hover:underline mb-3 flex items-center gap-1">
-          <svg id="chevron-${m.match_id}" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        ${disqualHtml}
+
+        <button onclick="toggleConstraints('${escHtml(m.match_id)}')" class="text-xs text-brand-600 hover:underline mt-3 flex items-center gap-1">
+          <svg id="chevron-${escHtml(m.match_id)}" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
-          Show constraint details (${exp.passed_constraints.length} passed, ${exp.failed_constraints.length} failed)
+          Show constraints (${(exp.passed_constraints||[]).length} passed, ${(exp.failed_constraints||[]).length} failed)
         </button>
 
-        <div id="constraints-${m.match_id}" class="hidden">
-          ${exp.failed_constraints.length ? `
-            <p class="text-xs font-semibold text-red-600 mb-2">Failed Constraints</p>
-            <div class="space-y-1 mb-4">${failedHtml}</div>
-          ` : ''}
-          ${exp.passed_constraints.length ? `
-            <p class="text-xs font-semibold text-green-600 mb-2">Passed Constraints</p>
-            <div class="space-y-1">${passedHtml}</div>
-          ` : ''}
+        <div id="constraints-${escHtml(m.match_id)}" class="hidden mt-3">
+          ${(exp.failed_constraints||[]).length ? `<p class="text-xs font-semibold text-red-600 mb-2">Failed</p><div class="space-y-1 mb-4">${failedHtml}</div>` : ''}
+          ${(exp.passed_constraints||[]).length ? `<p class="text-xs font-semibold text-green-600 mb-2">Passed</p><div class="space-y-1">${passedHtml}</div>` : ''}
         </div>
       </div>`;
   }).join('');
 
-  results.innerHTML = header + cards;
+  container.innerHTML = header + cards;
 }
 
 function toggleConstraints(matchId) {
@@ -730,8 +968,94 @@ function toggleConstraints(matchId) {
   ch.style.transform = hidden ? 'rotate(0deg)' : 'rotate(90deg)';
 }
 
-// ── Init ───────────────────────────────────────────────────
+// ── CSV Export ──────────────────────────────────────────────────────
+function exportMatchCsv(data) {
+  if (!data || !data.matches.length) { toast('No match results to export'); return; }
+  const rows = [
+    ['rank','match_id','nct_id','trial_title','composite_score','semantic_score','constraint_score','confidence','status','passed','failed'],
+    ...data.matches.map((m, i) => {
+      const exp = m.explanation || {};
+      return [
+        i+1,
+        m.match_id,
+        m.nct_id,
+        `"${(m.trial_title||'').replace(/"/g,'""')}"`,
+        (exp.composite_score||0).toFixed(4),
+        (exp.semantic_score||0).toFixed(4),
+        (exp.constraint_score||0).toFixed(4),
+        m.confidence,
+        m.status,
+        (exp.passed_constraints||[]).length,
+        (exp.failed_constraints||[]).length,
+      ];
+    })
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `match-results-${data.patient_id}-${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported');
+}
+
+// ── Match History ───────────────────────────────────────────────────
+async function loadMatchHistory() {
+  const pid = document.getElementById('history-patient-id').value.trim();
+  if (!pid) { toast('Enter a Patient ID'); return; }
+
+  setLoading('history-btn', true);
+  const el = document.getElementById('match-history-results');
+  el.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
+
+  try {
+    const r = await fetch(API + '/v1/match/history/' + encodeURIComponent(pid));
+    const d = await r.json();
+    if (!r.ok) { el.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || 'Error '+r.status)}</div>`; return; }
+
+    if (!d.results || !d.results.length) {
+      el.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No match history for this patient.</div>';
+      return;
+    }
+
+    const exportBtn = `<button onclick="exportMatchCsv({patient_id:'${escHtml(pid)}',matches:window._historyData})" class="text-xs border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">Export CSV</button>`;
+    window._historyData = d.results;
+
+    el.innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <p class="text-sm text-gray-600"><span class="font-semibold">${d.total}</span> past match${d.total!==1?'es':''} for <span class="font-mono text-brand-700 text-xs">${escHtml(pid)}</span></p>
+        ${exportBtn}
+      </div>` +
+      d.results.map(m => {
+        const exp = m.explanation || {};
+        const statusBadge = { eligible:'badge-high', likely_eligible:'badge-medium', potentially_eligible:'badge-low', ineligible:'badge-ineligible' }[m.status] || 'badge-low';
+        return `
+          <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-3 fade-in">
+            <div class="flex items-start gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap gap-2 items-center mb-1">
+                  <span class="text-xs font-mono text-gray-400">${escHtml(m.nct_id)}</span>
+                  ${badgeHtml((m.status||'').replace(/_/g,' '), statusBadge)}
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900">${escHtml(m.trial_title||m.nct_id)}</h3>
+                <p class="text-xs text-gray-400 mt-1">${fmtTs(m.created_at)}</p>
+              </div>
+              <div class="text-right shrink-0">
+                <p class="text-2xl font-bold text-gray-800">${Math.round((exp.composite_score||0)*100)}%</p>
+                <p class="text-xs text-gray-400">${escHtml(m.confidence||'—')}</p>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+  } catch(e) { el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`; }
+  finally { setLoading('history-btn', false); }
+}
+
+// ── Init ────────────────────────────────────────────────────────────
 loadHealth();
+loadAllConditions();
 </script>
 </body>
 </html>

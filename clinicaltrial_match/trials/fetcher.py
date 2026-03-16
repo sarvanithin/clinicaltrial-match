@@ -11,10 +11,13 @@ import time
 from typing import Any, AsyncIterator
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+import structlog
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from clinicaltrial_match.config import TrialsConfig
 from clinicaltrial_match.trials.models import Trial, TrialStatus
+
+_logger = structlog.get_logger()
 
 
 _FIELDS = ",".join([
@@ -130,7 +133,18 @@ class TrialFetcher:
     def __init__(self, config: TrialsConfig) -> None:
         self._config = config
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=30))
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=60),
+        retry=retry_if_exception_type(
+            (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError)
+        ),
+        before_sleep=lambda retry_state: _logger.warning(
+            "fetcher_retry",
+            attempt=retry_state.attempt_number,
+            error=str(retry_state.outcome.exception()) if retry_state.outcome else None,
+        ),
+    )
     async def _get_page(
         self,
         client: httpx.AsyncClient,

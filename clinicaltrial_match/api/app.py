@@ -104,6 +104,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Optional API key auth — only active when CTM_AUTH__API_KEY is set
+    if config.auth.api_key:
+        from clinicaltrial_match.api.middleware import APIKeyMiddleware
+        app.add_middleware(APIKeyMiddleware, api_key=config.auth.api_key)
+
     app.include_router(trials_router, prefix="/v1/trials", tags=["trials"])
     app.include_router(patients_router, prefix="/v1/patients", tags=["patients"])
     app.include_router(matching_router, prefix="/v1/match", tags=["matching"])

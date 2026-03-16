@@ -58,12 +58,18 @@ class APIConfig(BaseModel):
     log_requests: bool = True
 
 
+class AuthConfig(BaseModel):
+    api_key: str = ""  # empty = auth disabled
+    enabled: bool = False
+
+
 class CTMConfig(BaseSettings):
     trials: TrialsConfig = Field(default_factory=TrialsConfig)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
     claude: ClaudeConfig = Field(default_factory=ClaudeConfig)
     db: DatabaseConfig = Field(default_factory=DatabaseConfig)
     api: APIConfig = Field(default_factory=APIConfig)
+    auth: AuthConfig = Field(default_factory=AuthConfig)
 
     model_config = SettingsConfigDict(
         env_prefix="CTM_",
