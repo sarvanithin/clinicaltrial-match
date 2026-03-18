@@ -21,7 +21,6 @@
     .tab-active   { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #6b7280; }
     .badge-recruiting  { background:#dcfce7; color:#166534; }
-    .badge-completed   { background:#f3f4f6; color:#374151; }
     .badge-high        { background:#dcfce7; color:#166534; }
     .badge-medium      { background:#fef9c3; color:#854d0e; }
     .badge-low         { background:#ffedd5; color:#9a3412; }
@@ -31,7 +30,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .fade-in { animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-    pre { white-space: pre-wrap; word-break: break-word; }
     .constraint-pass { border-left: 3px solid #16a34a; }
     .constraint-fail { border-left: 3px solid #dc2626; }
     .nav-link { transition: all 0.15s; }
@@ -40,7 +38,7 @@
     .drawer-enter { animation: drawerIn 0.25s ease; }
     @keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-    .line-clamp-3 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+    .privacy-pill { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 1px solid #86efac; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -56,100 +54,144 @@
       <span class="font-bold text-lg tracking-tight">ClinicalTrial<span class="text-blue-300">Match</span></span>
     </div>
     <div class="flex items-center gap-1 text-sm">
-      <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-link active px-4 py-2 rounded-md">Dashboard</button>
-      <button onclick="showSection('trials')"    id="nav-trials"    class="nav-link px-4 py-2 rounded-md">Trials</button>
-      <button onclick="showSection('patients')"  id="nav-patients"  class="nav-link px-4 py-2 rounded-md">Patients</button>
-      <button onclick="showSection('match')"     id="nav-match"     class="nav-link px-4 py-2 rounded-md">Match</button>
+      <button onclick="showSection('home')"   id="nav-home"   class="nav-link active px-4 py-2 rounded-md">Try It</button>
+      <button onclick="showSection('trials')" id="nav-trials" class="nav-link px-4 py-2 rounded-md">Browse Trials</button>
+      <button onclick="showSection('about')"  id="nav-about"  class="nav-link px-4 py-2 rounded-md">About</button>
     </div>
-    <div id="health-dot" class="flex items-center gap-2 text-xs text-blue-200">
+    <div class="flex items-center gap-2 text-xs text-blue-200">
       <span class="w-2 h-2 rounded-full bg-gray-400 inline-block" id="health-indicator"></span>
       <span id="health-label">checking…</span>
     </div>
   </div>
 </nav>
 
-<div class="max-w-7xl mx-auto px-6 py-8">
+<div class="max-w-4xl mx-auto px-6 py-10">
 
-  <!-- ── DASHBOARD ─────────────────────────────────────────────── -->
-  <section id="section-dashboard" class="fade-in">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
-    <p class="text-gray-500 text-sm mb-6">AI-powered clinical trial matching from patient records</p>
+  <!-- ── HOME / MATCH ─────────────────────────────────────────────── -->
+  <section id="section-home" class="fade-in">
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Trials Cached</p>
-        <p class="text-3xl font-bold text-brand-700" id="stat-trials">—</p>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">API Status</p>
-        <p class="text-lg font-semibold mt-1" id="stat-status">—</p>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Version</p>
-        <p class="text-2xl font-bold text-gray-700" id="stat-version">—</p>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Uptime</p>
-        <p class="text-2xl font-bold text-gray-700" id="stat-uptime">—</p>
+    <!-- Hero -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Find Your Clinical Trial Match</h1>
+      <p class="text-gray-500 text-base max-w-xl mx-auto">
+        Upload a patient record or paste a clinical note — our AI instantly matches against
+        <span id="hero-trial-count" class="font-semibold text-brand-700">thousands</span> of active trials from ClinicalTrials.gov.
+      </p>
+    </div>
+
+    <!-- Privacy badge -->
+    <div class="privacy-pill rounded-xl px-5 py-3 mb-8 flex items-center gap-3">
+      <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+      <div>
+        <p class="text-sm font-semibold text-green-800">Your data is never stored</p>
+        <p class="text-xs text-green-700">Patient information is processed in memory only and discarded immediately after matching. Nothing is written to any database.</p>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
-      <h2 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Dependencies</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="dep-grid">
-        <div class="text-gray-400 text-sm">Loading…</div>
+    <!-- Input tabs -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+      <div class="flex border-b border-gray-100">
+        <button onclick="switchInputTab('fhir')" id="itab-fhir"
+          class="flex-1 px-6 py-4 text-sm font-medium tab-active flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          FHIR R4 Bundle
+        </button>
+        <button onclick="switchInputTab('note')" id="itab-note"
+          class="flex-1 px-6 py-4 text-sm font-medium tab-inactive flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Clinical Note
+        </button>
+      </div>
+
+      <!-- FHIR input -->
+      <div id="itab-fhir-content" class="p-6">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-xs text-gray-500">Paste a FHIR R4 JSON Bundle with Patient, Condition, Observation, and MedicationStatement resources</p>
+          <button onclick="fillDemoFHIR()" class="text-xs text-brand-600 hover:underline whitespace-nowrap">Load demo</button>
+        </div>
+        <textarea id="fhir-input" rows="12"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none bg-gray-50"
+          placeholder='{"resourceType": "Bundle", "entry": [...]}'></textarea>
+      </div>
+
+      <!-- Note input -->
+      <div id="itab-note-content" class="p-6 hidden">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-xs text-gray-500">Paste a clinical note, discharge summary, or any unstructured patient description</p>
+          <button onclick="fillDemoNote()" class="text-xs text-brand-600 hover:underline whitespace-nowrap">Load demo</button>
+        </div>
+        <textarea id="note-input" rows="12"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none bg-gray-50"
+          placeholder="Patient is a 58-year-old female with type 2 diabetes…"></textarea>
+      </div>
+
+      <!-- Controls -->
+      <div class="px-6 pb-6">
+        <div class="flex gap-3 flex-wrap mb-4">
+          <div class="flex-1 min-w-36">
+            <label class="block text-xs text-gray-500 mb-1">Max results</label>
+            <input id="live-max" type="number" value="10" min="1" max="30"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          </div>
+          <div class="flex-1 min-w-36">
+            <label class="block text-xs text-gray-500 mb-1">Min match score</label>
+            <input id="live-min-score" type="number" value="0.2" min="0" max="1" step="0.05"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
+          </div>
+          <div class="flex-1 min-w-36">
+            <label class="block text-xs text-gray-500 mb-1">Trial status</label>
+            <select id="live-status"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="RECRUITING">Recruiting only</option>
+              <option value="">All statuses</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="runLiveMatch()" id="live-match-btn"
+          class="w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Find Matching Trials
+        </button>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-      <h2 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Quick Start</h2>
-      <div class="grid md:grid-cols-3 gap-4">
-        <div onclick="showSection('trials')" class="cursor-pointer group border border-gray-200 rounded-lg p-4 hover:border-brand-500 hover:bg-brand-50 transition-all">
-          <div class="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-brand-200 transition-all">
-            <svg class="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          </div>
-          <p class="font-semibold text-gray-800 text-sm">Sync Trials</p>
-          <p class="text-xs text-gray-500 mt-1">Fetch from ClinicalTrials.gov by condition</p>
-        </div>
-        <div onclick="showSection('patients')" class="cursor-pointer group border border-gray-200 rounded-lg p-4 hover:border-brand-500 hover:bg-brand-50 transition-all">
-          <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-200 transition-all">
-            <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          </div>
-          <p class="font-semibold text-gray-800 text-sm">Add Patient</p>
-          <p class="text-xs text-gray-500 mt-1">Ingest via FHIR bundle or clinical note</p>
-        </div>
-        <div onclick="showSection('match')" class="cursor-pointer group border border-gray-200 rounded-lg p-4 hover:border-brand-500 hover:bg-brand-50 transition-all">
-          <div class="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-all">
-            <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          </div>
-          <p class="font-semibold text-gray-800 text-sm">Run Match</p>
-          <p class="text-xs text-gray-500 mt-1">Find eligible trials for a patient</p>
-        </div>
-      </div>
-    </div>
+    <!-- Results -->
+    <div id="live-results"></div>
+
   </section>
 
-  <!-- ── TRIALS ────────────────────────────────────────────────── -->
-  <section id="section-trials" class="fade-in hidden">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Clinical Trials</h1>
-    <p class="text-gray-500 text-sm mb-6">Sync and browse trials from ClinicalTrials.gov</p>
+  <!-- ── TRIALS ────────────────────────────────────────────────────── -->
+  <section id="section-trials" class="fade-in hidden max-w-7xl mx-auto w-full">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Browse Trials</h1>
+        <p class="text-gray-500 text-sm">Explore trials cached from ClinicalTrials.gov</p>
+      </div>
+      <button onclick="showSyncPanel()" id="sync-toggle-btn"
+        class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Sync New Trials
+      </button>
+    </div>
 
-    <!-- sync form -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-      <h2 class="font-semibold text-gray-800 mb-4">Sync Trials</h2>
+    <!-- Sync panel (collapsible) -->
+    <div id="sync-panel" class="hidden bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+      <h2 class="font-semibold text-gray-800 mb-4 text-sm">Sync from ClinicalTrials.gov</h2>
       <div class="flex gap-3 flex-wrap">
-        <div class="flex-1 min-w-48 relative">
+        <div class="flex-1 min-w-48">
           <input id="sync-condition" list="sync-condition-suggestions" type="text"
             placeholder="Condition (e.g. type 2 diabetes)"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             value="type 2 diabetes" oninput="fetchAutocompleteSuggestions(this.value, 'sync-condition-suggestions')"/>
           <datalist id="sync-condition-suggestions"></datalist>
         </div>
-        <input id="sync-max" type="number" placeholder="Max" value="20" min="1" max="200"
+        <input id="sync-max" type="number" placeholder="Max" value="20" min="1" max="500"
           class="w-24 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
         <button onclick="syncTrials()" id="sync-btn"
-          class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
           Sync
         </button>
       </div>
@@ -167,16 +209,7 @@
       </div>
     </div>
 
-    <!-- recent sync jobs -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold text-gray-700">Recent Sync Jobs</h2>
-        <button onclick="loadSyncJobs()" class="text-xs text-brand-600 hover:underline">Refresh</button>
-      </div>
-      <div id="sync-jobs-list" class="text-xs text-gray-400">Loading…</div>
-    </div>
-
-    <!-- filter bar -->
+    <!-- Filter bar -->
     <div class="flex gap-3 mb-4 flex-wrap items-center">
       <div class="relative">
         <input id="trial-filter-condition" list="filter-condition-suggestions" type="text"
@@ -199,139 +232,61 @@
     <div id="trials-list" class="space-y-3"></div>
   </section>
 
-  <!-- ── PATIENTS ───────────────────────────────────────────────── -->
-  <section id="section-patients" class="fade-in hidden">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Patients</h1>
-    <p class="text-gray-500 text-sm mb-6">Browse and ingest patient records</p>
+  <!-- ── ABOUT ─────────────────────────────────────────────────────── -->
+  <section id="section-about" class="fade-in hidden">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">About ClinicalTrial Match</h1>
+    <p class="text-gray-500 text-sm mb-8">Open-source AI matching between patients and clinical trials</p>
 
-    <div class="flex gap-0 border-b border-gray-200 mb-6">
-      <button onclick="switchPatientTab('list')" id="ptab-list" class="px-5 py-3 text-sm tab-active">Patient List</button>
-      <button onclick="switchPatientTab('fhir')" id="ptab-fhir" class="px-5 py-3 text-sm tab-inactive">FHIR R4 Bundle</button>
-      <button onclick="switchPatientTab('note')" id="ptab-note" class="px-5 py-3 text-sm tab-inactive">Clinical Note</button>
-    </div>
-
-    <!-- Patient List tab -->
-    <div id="ptab-list-content">
-      <div class="flex items-center justify-between mb-4">
-        <span class="text-sm text-gray-500" id="patients-count"></span>
-        <button onclick="loadPatientList()" class="text-xs text-brand-600 hover:underline">Refresh</button>
-      </div>
-      <div id="patients-list" class="space-y-3">
-        <div class="text-gray-400 text-sm py-4">Loading…</div>
-      </div>
-      <div class="flex gap-3 mt-4 items-center" id="patients-pagination">
-        <button id="patients-prev" onclick="loadPatientList(patientOffset-20)" disabled
-          class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40">← Prev</button>
-        <button id="patients-next" onclick="loadPatientList(patientOffset+20)"
-          class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40">Next →</button>
-      </div>
-    </div>
-
-    <!-- FHIR tab -->
-    <div id="ptab-fhir-content" class="hidden">
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-semibold text-gray-800 text-sm">FHIR R4 JSON Bundle</h2>
-          <button onclick="fillDemoFHIR()" class="text-xs text-brand-600 hover:underline">Load demo patient</button>
-        </div>
-        <textarea id="fhir-input" rows="14"
-          class="w-full border border-gray-300 rounded-lg px-4 py-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-          placeholder='{"resourceType": "Bundle", "entry": [...]}'></textarea>
-        <button onclick="ingestFHIR()" id="fhir-btn"
-          class="mt-4 bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
-          Ingest Patient
-        </button>
+        <h2 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Privacy First
+        </h2>
+        <p class="text-sm text-gray-600 leading-relaxed">Patient data is <strong>never stored</strong>. Your FHIR bundle or clinical note is processed entirely in server memory and discarded immediately after matching. No patient records, no logs, no retention.</p>
       </div>
-    </div>
-
-    <!-- Note tab -->
-    <div id="ptab-note-content" class="hidden">
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-semibold text-gray-800 text-sm">Clinical Note Text</h2>
-          <button onclick="fillDemoNote()" class="text-xs text-brand-600 hover:underline">Load demo note</button>
-        </div>
-        <input id="note-patient-id" type="text" placeholder="Patient ID (optional — auto-generated if blank)"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-        <textarea id="note-input" rows="10"
-          class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-          placeholder="Paste clinical note text here…"></textarea>
-        <button onclick="ingestNote()" id="note-btn"
-          class="mt-4 bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
-          Extract &amp; Ingest
-        </button>
+        <h2 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          How It Works
+        </h2>
+        <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+          <li>Upload FHIR bundle or clinical note</li>
+          <li>AI extracts age, gender, diagnoses, labs, medications</li>
+          <li>Semantic search across 400K+ trials from ClinicalTrials.gov</li>
+          <li>Rule-based eligibility constraint evaluation</li>
+          <li>Composite score (40% semantic + 60% constraints)</li>
+          <li>Ranked results with plain-English explanations</li>
+        </ol>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <h2 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          Open Source
+        </h2>
+        <p class="text-sm text-gray-600 leading-relaxed mb-3">Self-host with your own API key. Full source on GitHub.</p>
+        <a href="https://github.com/sarvanithin/clinicaltrial-match" target="_blank"
+          class="text-xs bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors inline-block">
+          View on GitHub ↗
+        </a>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <h2 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Data Sources
+        </h2>
+        <p class="text-sm text-gray-600 leading-relaxed">Trials synced from <strong>ClinicalTrials.gov API v2</strong> (public domain). Only trial metadata is cached — no patient data ever touches our database.</p>
       </div>
     </div>
 
-    <div id="patient-result" class="mt-6 hidden"></div>
-  </section>
-
-  <!-- ── MATCH ─────────────────────────────────────────────────── -->
-  <section id="section-match" class="fade-in hidden">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Match Patient to Trials</h1>
-    <p class="text-gray-500 text-sm mb-6">Find eligible clinical trials using AI-powered matching</p>
-
-    <div class="flex gap-0 border-b border-gray-200 mb-6">
-      <button onclick="switchMatchTab('match')" id="mtab-match" class="px-5 py-3 text-sm tab-active">Run Match</button>
-      <button onclick="switchMatchTab('history')" id="mtab-history" class="px-5 py-3 text-sm tab-inactive">History</button>
-    </div>
-
-    <!-- Match tab -->
-    <div id="mtab-match-content">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="md:col-span-2">
-            <label class="block text-xs font-medium text-gray-600 mb-1">Patient ID</label>
-            <input id="match-patient-id" type="text" placeholder="e.g. demo-patient-001"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Max Results</label>
-            <input id="match-max" type="number" value="10" min="1" max="50"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Min Score</label>
-            <input id="match-min-score" type="number" value="0.2" min="0" max="1" step="0.05"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Status Filter</label>
-            <select id="match-status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-              <option value="RECRUITING">Recruiting Only</option>
-              <option value="">All Statuses</option>
-            </select>
-          </div>
-          <div class="flex items-end">
-            <button onclick="runMatch()" id="match-btn"
-              class="w-full bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              Find Matches
-            </button>
-          </div>
-        </div>
-        <p class="text-xs text-gray-400 mt-3">Ingest a patient first, then paste their Patient ID here.</p>
-      </div>
-      <div id="match-results"></div>
-    </div>
-
-    <!-- History tab -->
-    <div id="mtab-history-content" class="hidden">
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
-        <div class="flex gap-3">
-          <input id="history-patient-id" type="text" placeholder="Patient ID"
-            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"/>
-          <button onclick="loadMatchHistory()" id="history-btn"
-            class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
-            Load History
-          </button>
-        </div>
-      </div>
-      <div id="match-history-results"></div>
+    <div class="bg-brand-50 border border-brand-200 rounded-xl p-6">
+      <p class="text-xs text-brand-800">
+        <strong>Disclaimer:</strong> ClinicalTrial Match is a research and exploration tool. Results are generated by AI and should not be used as the sole basis for clinical decisions. Always consult a qualified healthcare professional before enrolling in any clinical trial.
+      </p>
     </div>
   </section>
 
-</div><!-- /max-w-7xl -->
+</div><!-- /max-w-4xl -->
 
 <!-- TRIAL DETAIL DRAWER -->
 <div id="drawer-overlay" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden" onclick="closeDrawer()"></div>
@@ -350,10 +305,9 @@
 
 <script>
 const API = '';
-let patientOffset = 0;
 let _conditionCache = [];
 
-// ── Utils ───────────────────────────────────────────────────────────
+// ── Utils ─────────────────────────────────────────────────────────────
 function toast(msg, dur=3000) {
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
@@ -361,106 +315,378 @@ function toast(msg, dur=3000) {
   setTimeout(() => t.classList.add('hidden'), dur);
 }
 
-function setLoading(btnId, loading) {
+function setLoading(btnId, loading, text, loadingText) {
   const btn = document.getElementById(btnId);
   if (!btn) return;
   btn.disabled = loading;
-  btn.style.opacity = loading ? '0.6' : '1';
+  btn.style.opacity = loading ? '0.7' : '1';
+  if (text && loadingText) btn.innerHTML = loading ? loadingText : text;
 }
 
 function badgeHtml(text, cls) {
   return `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${escHtml(text)}</span>`;
 }
 
-function scoreBar(score) {
+function scoreBar(score, label) {
   const pct = Math.round((score || 0) * 100);
   const color = score >= 0.7 ? 'bg-green-500' : score >= 0.5 ? 'bg-yellow-500' : 'bg-orange-400';
   return `
-    <div class="flex items-center gap-2">
-      <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div class="${color} h-full score-bar-fill rounded-full" style="width:${pct}%"></div>
+    <div>
+      ${label ? `<p class="text-xs text-gray-500 mb-1">${label}</p>` : ''}
+      <div class="flex items-center gap-2">
+        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="${color} h-full score-bar-fill rounded-full" style="width:${pct}%"></div>
+        </div>
+        <span class="text-xs font-bold text-gray-700 w-10 text-right">${pct}%</span>
       </div>
-      <span class="text-xs font-bold text-gray-700 w-10 text-right">${pct}%</span>
     </div>`;
 }
 
 function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function fmtTs(ts) {
-  if (!ts) return '—';
-  return new Date(ts * 1000).toLocaleString();
-}
-
-// ── Navigation ──────────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────────────────────
 function showSection(name) {
-  ['dashboard','trials','patients','match'].forEach(s => {
-    document.getElementById('section-'+s).classList.toggle('hidden', s !== name);
-    const btn = document.getElementById('nav-'+s);
-    btn.classList.toggle('active', s === name);
+  ['home', 'trials', 'about'].forEach(s => {
+    document.getElementById('section-' + s).classList.toggle('hidden', s !== name);
+    const btn = document.getElementById('nav-' + s);
+    if (btn) btn.classList.toggle('active', s === name);
   });
-  if (name === 'dashboard') loadHealth();
-  if (name === 'trials') { loadTrials(); loadSyncJobs(); loadAllConditions(); }
-  if (name === 'patients') loadPatientList();
+  if (name === 'trials') { loadTrials(); loadAllConditions(); }
 }
 
-// ── Health / Dashboard ──────────────────────────────────────────────
+// ── Health check ──────────────────────────────────────────────────────
 async function loadHealth() {
   try {
     const r = await fetch(API + '/v1/health');
     const d = await r.json();
-
-    document.getElementById('stat-trials').textContent  = d.trials_cached;
-    document.getElementById('stat-version').textContent = d.version;
-    document.getElementById('stat-uptime').textContent  = fmtUptime(d.uptime_seconds);
-
-    const statusEl = document.getElementById('stat-status');
-    if (d.status === 'healthy') {
-      statusEl.textContent = '✓ Healthy';
-      statusEl.className = 'text-lg font-semibold mt-1 text-green-600';
-    } else {
-      statusEl.textContent = '⚠ Degraded';
-      statusEl.className = 'text-lg font-semibold mt-1 text-yellow-600';
-    }
-
     const dot = document.getElementById('health-indicator');
     dot.className = `w-2 h-2 rounded-full inline-block ${d.status === 'healthy' ? 'bg-green-400' : 'bg-yellow-400'}`;
     document.getElementById('health-label').textContent = d.status;
-
-    const grid = document.getElementById('dep-grid');
-    grid.innerHTML = Object.entries(d.dependencies).map(([k, v]) => `
-      <div class="flex items-center gap-2 p-3 rounded-lg ${v ? 'bg-green-50' : 'bg-red-50'}">
-        <span class="text-lg">${v ? '✅' : '❌'}</span>
-        <div>
-          <p class="text-xs font-semibold text-gray-700">${fmtDepName(k)}</p>
-          <p class="text-xs ${v ? 'text-green-600' : 'text-red-600'}">${v ? 'Connected' : 'Unavailable'}</p>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    document.getElementById('health-label').textContent = 'offline';
+    const countEl = document.getElementById('hero-trial-count');
+    if (countEl && d.trials_cached > 0) countEl.textContent = d.trials_cached.toLocaleString();
+  } catch (_) {
     document.getElementById('health-indicator').className = 'w-2 h-2 rounded-full inline-block bg-red-400';
+    document.getElementById('health-label').textContent = 'offline';
   }
 }
 
-function fmtDepName(k) {
-  return { db:'Database (SQLite)', embeddings:'Embedding Index', anthropic_api:'Anthropic API', clinicaltrials_api:'ClinicalTrials.gov' }[k] || k;
+// ── Input tabs ────────────────────────────────────────────────────────
+function switchInputTab(tab) {
+  ['fhir', 'note'].forEach(t => {
+    document.getElementById('itab-' + t + '-content').classList.toggle('hidden', t !== tab);
+    document.getElementById('itab-' + t).className =
+      `flex-1 px-6 py-4 text-sm font-medium ${t === tab ? 'tab-active' : 'tab-inactive'} flex items-center justify-center gap-2`;
+  });
 }
 
-function fmtUptime(s) {
-  if (s < 60) return `${Math.round(s)}s`;
-  if (s < 3600) return `${Math.floor(s/60)}m`;
-  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+function fillDemoFHIR() {
+  document.getElementById('fhir-input').value = JSON.stringify({
+    resourceType: "Bundle", type: "collection",
+    entry: [
+      { resource: { resourceType: "Patient", id: "demo-001", birthDate: "1972-06-10", gender: "male" } },
+      { resource: { resourceType: "Condition", code: { coding: [{ system: "http://hl7.org/fhir/sid/icd-10", code: "E11", display: "Type 2 diabetes mellitus" }], text: "Type 2 diabetes mellitus" }, clinicalStatus: { text: "Active" } } },
+      { resource: { resourceType: "Observation", code: { text: "HbA1c" }, valueQuantity: { value: 8.5, unit: "%" }, effectiveDateTime: "2025-03-01" } },
+      { resource: { resourceType: "MedicationStatement", medicationCodeableConcept: { text: "Metformin" }, status: "active" } }
+    ]
+  }, null, 2);
 }
 
-// ── Autocomplete ────────────────────────────────────────────────────
+function fillDemoNote() {
+  document.getElementById('note-input').value =
+`Patient is a 58-year-old female with a 12-year history of type 2 diabetes mellitus (ICD-10: E11).
+
+Current medications: Metformin 1000mg twice daily, Lisinopril 10mg daily.
+
+Recent labs (2025-02-15):
+- HbA1c: 7.8%
+- eGFR: 72 mL/min
+- Fasting glucose: 142 mg/dL
+
+No history of cardiovascular disease, renal failure, or malignancy. Non-smoker. BMI 29.4.
+
+Assessment: Type 2 DM, suboptimally controlled.`;
+}
+
+// ── Live ephemeral match ──────────────────────────────────────────────
+async function runLiveMatch() {
+  const isNote = document.getElementById('itab-note-content') &&
+                 !document.getElementById('itab-note-content').classList.contains('hidden');
+  const source = isNote ? 'note' : 'fhir';
+
+  let payload;
+  if (source === 'fhir') {
+    const raw = document.getElementById('fhir-input').value.trim();
+    if (!raw) { toast('Paste a FHIR bundle or click "Load demo"'); return; }
+    try { payload = { source: 'fhir', fhir_data: JSON.parse(raw) }; }
+    catch (e) { toast('Invalid JSON: ' + e.message); return; }
+  } else {
+    const note = document.getElementById('note-input').value.trim();
+    if (!note) { toast('Paste a clinical note or click "Load demo"'); return; }
+    payload = { source: 'note', note_text: note };
+  }
+
+  const maxResults = parseInt(document.getElementById('live-max').value) || 10;
+  const minScore = parseFloat(document.getElementById('live-min-score').value) || 0.2;
+  const statusVal = document.getElementById('live-status').value;
+
+  payload.max_results = maxResults;
+  payload.min_score = minScore;
+  payload.trial_status_filter = statusVal ? [statusVal] : ['RECRUITING', 'NOT_YET_RECRUITING', 'ACTIVE_NOT_RECRUITING', 'COMPLETED'];
+
+  const resultsEl = document.getElementById('live-results');
+  const btnOriginal = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Find Matching Trials`;
+  const btnLoading = `<svg class="spinner w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> Matching…`;
+  setLoading('live-match-btn', true, btnOriginal, btnLoading);
+
+  resultsEl.innerHTML = `
+    <div class="flex items-center gap-3 text-gray-500 text-sm py-8 justify-center">
+      <svg class="spinner w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+      </svg>
+      Extracting features &amp; searching trials — this may take 10–30 seconds…
+    </div>`;
+
+  try {
+    const r = await fetch(API + '/v1/match/live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">${escHtml(d.detail || 'Error ' + r.status)}</div>`;
+      return;
+    }
+    renderLiveResults(d);
+  } catch (e) {
+    resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">Network error: ${escHtml(e.message)}</div>`;
+  } finally {
+    setLoading('live-match-btn', false, btnOriginal, btnLoading);
+    document.getElementById('live-match-btn').innerHTML = btnOriginal;
+  }
+}
+
+function renderLiveResults(d) {
+  const resultsEl = document.getElementById('live-results');
+
+  // Patient summary card
+  const patientCard = `
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6 fade-in">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-semibold text-gray-800 text-sm">Extracted Patient Profile</h2>
+        <div class="privacy-pill rounded-full px-3 py-1 text-xs text-green-800 font-medium flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Not stored
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-4">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-500 mb-0.5">Age</p>
+          <p class="font-bold text-gray-800">${d.age_years ? Math.round(d.age_years) + 'y' : '—'}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-500 mb-0.5">Gender</p>
+          <p class="font-bold text-gray-800 capitalize">${escHtml(d.gender)}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-500 mb-0.5">Diagnoses</p>
+          <p class="font-bold text-gray-800">${d.diagnoses_count}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-500 mb-0.5">Medications</p>
+          <p class="font-bold text-gray-800">${d.medications_count}</p>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 bg-gray-50 rounded-lg p-3 leading-relaxed">${escHtml(d.clinical_summary)}</p>
+      <p class="text-xs text-gray-400 mt-2">Extraction confidence: ${Math.round(d.extraction_confidence * 100)}% · Processed in ${d.processing_time_ms.toFixed(0)}ms</p>
+    </div>`;
+
+  if (!d.matches.length) {
+    resultsEl.innerHTML = patientCard + `
+      <div class="text-center py-10 text-gray-400">
+        <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-sm">No matches found above the minimum score. Try lowering the min score or including more trial statuses.</p>
+      </div>`;
+    return;
+  }
+
+  const header = `
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-sm text-gray-600"><span class="font-bold text-gray-900 text-base">${d.matches.length}</span> matching trials found</p>
+      <button onclick="exportMatchCsv(window._lastLiveData)" class="text-xs border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Export CSV
+      </button>
+    </div>`;
+
+  window._lastLiveData = d;
+
+  const cards = d.matches.map((m, i) => {
+    const exp = m.explanation || {};
+    const statusBadge = { eligible: 'badge-high', likely_eligible: 'badge-medium', potentially_eligible: 'badge-low', ineligible: 'badge-ineligible' }[m.status] || 'badge-low';
+    const statusLabel = (m.status || '').replace(/_/g, ' ');
+    const confBadge = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }[m.confidence] || 'badge-low';
+
+    const passedHtml = (exp.passed_constraints || []).slice(0, 6).map(c =>
+      `<div class="constraint-pass bg-green-50 rounded px-3 py-2 text-xs text-gray-700">${escHtml(c.criterion)}</div>`
+    ).join('');
+
+    const failedHtml = (exp.failed_constraints || []).slice(0, 6).map(c => `
+      <div class="constraint-fail bg-red-50 rounded px-3 py-2 text-xs text-gray-700">
+        <span class="font-medium">${escHtml(c.criterion)}</span>
+        <span class="block text-gray-500 mt-0.5">${escHtml(c.reason || '')}</span>
+      </div>`).join('');
+
+    const disqualHtml = (exp.disqualifying_factors || []).length ? `
+      <div class="mt-3 p-3 bg-red-50 rounded-lg">
+        <p class="text-xs font-semibold text-red-600 mb-1">Disqualifying Factors</p>
+        ${exp.disqualifying_factors.map(f => `<p class="text-xs text-red-700">• ${escHtml(f)}</p>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in mb-4">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-9 h-9 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold text-sm shrink-0">${i + 1}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap gap-2 items-center mb-1">
+              <span class="text-xs font-mono text-gray-400">${escHtml(m.nct_id)}</span>
+              ${badgeHtml(statusLabel, statusBadge)}
+              ${badgeHtml(m.confidence + ' confidence', confBadge)}
+            </div>
+            <h3 class="font-semibold text-gray-900 text-sm leading-snug">${escHtml(m.trial_title || m.nct_id)}</h3>
+          </div>
+          <a href="https://clinicaltrials.gov/study/${escHtml(m.nct_id)}" target="_blank"
+            class="shrink-0 text-xs text-brand-600 hover:underline whitespace-nowrap">View ↗</a>
+        </div>
+
+        <!-- Score bars -->
+        <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl mb-4">
+          ${scoreBar(exp.composite_score, 'Overall Match')}
+          ${scoreBar(exp.semantic_score, 'Semantic')}
+          ${scoreBar(exp.constraint_score, 'Eligibility')}
+        </div>
+
+        ${disqualHtml}
+
+        <button onclick="toggleConstraints('${escHtml(m.match_id)}')"
+          class="text-xs text-brand-600 hover:underline mt-3 flex items-center gap-1">
+          <svg id="chevron-${escHtml(m.match_id)}" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          Eligibility details (${(exp.passed_constraints || []).length} passed · ${(exp.failed_constraints || []).length} failed)
+        </button>
+
+        <div id="constraints-${escHtml(m.match_id)}" class="hidden mt-3 space-y-3">
+          ${(exp.failed_constraints || []).length ? `<div><p class="text-xs font-semibold text-red-600 mb-2">Not met</p><div class="space-y-1">${failedHtml}</div></div>` : ''}
+          ${(exp.passed_constraints || []).length ? `<div><p class="text-xs font-semibold text-green-600 mb-2">Met</p><div class="space-y-1">${passedHtml}</div></div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  resultsEl.innerHTML = patientCard + header + cards;
+}
+
+function toggleConstraints(matchId) {
+  const el = document.getElementById('constraints-' + matchId);
+  const ch = document.getElementById('chevron-' + matchId);
+  const hidden = el.classList.toggle('hidden');
+  ch.style.transform = hidden ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────
+function exportMatchCsv(data) {
+  if (!data || !data.matches.length) { toast('No results to export'); return; }
+  const rows = [
+    ['rank', 'nct_id', 'trial_title', 'composite_score', 'semantic_score', 'constraint_score', 'confidence', 'status', 'passed_constraints', 'failed_constraints'],
+    ...data.matches.map((m, i) => {
+      const exp = m.explanation || {};
+      return [
+        i + 1, m.nct_id,
+        `"${(m.trial_title || '').replace(/"/g, '""')}"`,
+        (exp.composite_score || 0).toFixed(4),
+        (exp.semantic_score || 0).toFixed(4),
+        (exp.constraint_score || 0).toFixed(4),
+        m.confidence, m.status,
+        (exp.passed_constraints || []).length,
+        (exp.failed_constraints || []).length,
+      ];
+    }),
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `trial-matches-${Date.now()}.csv`;
+  a.click();
+  toast('CSV exported');
+}
+
+// ── Trials ────────────────────────────────────────────────────────────
+function showSyncPanel() {
+  const p = document.getElementById('sync-panel');
+  p.classList.toggle('hidden');
+}
+
+async function syncTrials() {
+  const condition = document.getElementById('sync-condition').value.trim();
+  const maxTrials = parseInt(document.getElementById('sync-max').value) || 20;
+  if (!condition) { toast('Enter a condition'); return; }
+
+  setLoading('sync-btn', true);
+  document.getElementById('sync-status').classList.remove('hidden');
+  document.getElementById('sync-spinner').classList.remove('hidden');
+  document.getElementById('sync-msg').textContent = 'Starting sync…';
+  document.getElementById('sync-bar').style.width = '5%';
+
+  try {
+    const r = await fetch(API + '/v1/trials/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ condition, max_trials: maxTrials, status_filter: ['RECRUITING', 'NOT_YET_RECRUITING', 'ACTIVE_NOT_RECRUITING'] }),
+    });
+    const job = await r.json();
+    if (!r.ok) { toast('Sync error: ' + (job.detail || r.status)); setLoading('sync-btn', false); return; }
+    pollSync(job.job_id, maxTrials);
+  } catch (e) {
+    toast('Sync failed: ' + e.message);
+    setLoading('sync-btn', false);
+  }
+}
+
+async function pollSync(jobId, max) {
+  const poll = async () => {
+    try {
+      const r = await fetch(API + '/v1/trials/sync/' + jobId);
+      const d = await r.json();
+      const pct = max > 0 ? Math.min(95, Math.round((d.trials_fetched / max) * 100)) : 50;
+      document.getElementById('sync-bar').style.width = pct + '%';
+      document.getElementById('sync-msg').textContent =
+        `${d.status} — fetched ${d.trials_fetched}, parsed ${d.trials_parsed}${d.error ? ' ⚠ ' + d.error : ''}`;
+      if (d.status === 'completed') {
+        document.getElementById('sync-bar').style.width = '100%';
+        document.getElementById('sync-spinner').classList.add('hidden');
+        document.getElementById('sync-msg').textContent = `✓ Done — ${d.trials_fetched} trials synced`;
+        setLoading('sync-btn', false);
+        toast(`Synced ${d.trials_fetched} trials`);
+        loadTrials(); loadHealth(); loadAllConditions();
+      } else if (d.status === 'failed') {
+        document.getElementById('sync-spinner').classList.add('hidden');
+        document.getElementById('sync-msg').textContent = '✗ Failed: ' + (d.error || 'unknown error');
+        setLoading('sync-btn', false);
+      } else { setTimeout(poll, 1500); }
+    } catch (_) { setTimeout(poll, 3000); }
+  };
+  poll();
+}
+
 async function loadAllConditions() {
   try {
     const r = await fetch(API + '/v1/trials/autocomplete?q=');
     const d = await r.json();
     _conditionCache = d.suggestions || [];
-  } catch(_) {}
+  } catch (_) {}
 }
 
 async function fetchAutocompleteSuggestions(q, datalistId) {
@@ -470,95 +696,15 @@ async function fetchAutocompleteSuggestions(q, datalistId) {
     const r = await fetch(API + '/v1/trials/autocomplete?q=' + encodeURIComponent(q));
     const d = await r.json();
     dl.innerHTML = (d.suggestions || []).map(s => `<option value="${escHtml(s)}">`).join('');
-  } catch(_) {
-    dl.innerHTML = _conditionCache
-      .filter(s => s.toLowerCase().includes(q.toLowerCase()))
-      .slice(0, 10)
-      .map(s => `<option value="${escHtml(s)}">`)
-      .join('');
-  }
-}
-
-// ── Trials ──────────────────────────────────────────────────────────
-async function syncTrials() {
-  const condition = document.getElementById('sync-condition').value.trim();
-  const maxTrials = parseInt(document.getElementById('sync-max').value) || 20;
-  if (!condition) { toast('Enter a condition to search'); return; }
-
-  setLoading('sync-btn', true);
-  document.getElementById('sync-status').classList.remove('hidden');
-  document.getElementById('sync-spinner').classList.remove('hidden');
-  document.getElementById('sync-msg').textContent = 'Starting sync…';
-  document.getElementById('sync-bar').style.width = '5%';
-
-  try {
-    const r = await fetch(API+'/v1/trials/sync', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ condition, max_trials: maxTrials, status_filter: ['RECRUITING','NOT_YET_RECRUITING','ACTIVE_NOT_RECRUITING'] })
-    });
-    const job = await r.json();
-    if (!r.ok) { toast('Sync error: ' + (job.detail || r.status)); setLoading('sync-btn',false); return; }
-    pollSync(job.job_id, maxTrials);
-  } catch(e) {
-    toast('Sync failed: ' + e.message);
-    setLoading('sync-btn', false);
-  }
-}
-
-async function pollSync(jobId, max) {
-  const poll = async () => {
-    try {
-      const r = await fetch(API+'/v1/trials/sync/'+jobId);
-      const d = await r.json();
-      const pct = max > 0 ? Math.min(95, Math.round((d.trials_fetched/max)*100)) : 50;
-      document.getElementById('sync-bar').style.width = pct + '%';
-      document.getElementById('sync-msg').textContent =
-        `${d.status} — fetched ${d.trials_fetched}, parsed ${d.trials_parsed}${d.error ? ' ⚠ '+d.error : ''}`;
-
-      if (d.status === 'completed') {
-        document.getElementById('sync-bar').style.width = '100%';
-        document.getElementById('sync-spinner').classList.add('hidden');
-        document.getElementById('sync-msg').textContent = `✓ Done — ${d.trials_fetched} trials synced`;
-        setLoading('sync-btn', false);
-        toast(`Synced ${d.trials_fetched} trials`);
-        loadTrials(); loadHealth(); loadSyncJobs(); loadAllConditions();
-      } else if (d.status === 'failed') {
-        document.getElementById('sync-spinner').classList.add('hidden');
-        document.getElementById('sync-msg').textContent = '✗ Failed: ' + (d.error || 'unknown error');
-        setLoading('sync-btn', false);
-      } else {
-        setTimeout(poll, 1500);
-      }
-    } catch(_) { setTimeout(poll, 3000); }
-  };
-  poll();
-}
-
-async function loadSyncJobs() {
-  const el = document.getElementById('sync-jobs-list');
-  if (!el) return;
-  try {
-    const r = await fetch(API + '/v1/trials/sync?limit=5');
-    const d = await r.json();
-    if (!d.jobs || !d.jobs.length) { el.textContent = 'No sync jobs yet.'; return; }
-    el.innerHTML = '<div class="space-y-1">' + d.jobs.map(j => {
-      const statusColor = j.status === 'completed' ? 'text-green-600' : j.status === 'failed' ? 'text-red-600' : 'text-yellow-600';
-      return `<div class="flex items-center gap-3 py-1">
-        <span class="${statusColor} font-semibold w-20 shrink-0">${j.status}</span>
-        <span class="text-gray-700 flex-1 truncate">${escHtml(j.condition)}</span>
-        <span class="text-gray-400 shrink-0">${j.trials_fetched} fetched</span>
-      </div>`;
-    }).join('') + '</div>';
-  } catch(e) { el.textContent = 'Failed to load jobs.'; }
+  } catch (_) {}
 }
 
 async function loadTrials() {
   const condition = document.getElementById('trial-filter-condition').value.trim();
-  const status    = document.getElementById('trial-filter-status').value;
+  const status = document.getElementById('trial-filter-status').value;
   let url = API + '/v1/trials?limit=50';
   if (condition) url += '&condition=' + encodeURIComponent(condition);
-  if (status)    url += '&status='    + encodeURIComponent(status);
+  if (status) url += '&status=' + encodeURIComponent(status);
 
   const list = document.getElementById('trials-list');
   list.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
@@ -566,10 +712,11 @@ async function loadTrials() {
   try {
     const r = await fetch(url);
     const d = await r.json();
+    if (!r.ok) { list.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || r.status)}</div>`; return; }
     document.getElementById('trials-count').textContent = `${d.total} trial${d.total !== 1 ? 's' : ''}`;
 
-    if (!d.trials.length) {
-      list.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No trials found. Try syncing a condition above.</div>';
+    if (!d.trials || !d.trials.length) {
+      list.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No trials found. Use Sync New Trials to fetch from ClinicalTrials.gov.</div>';
       return;
     }
 
@@ -593,26 +740,23 @@ async function loadTrials() {
               class="text-xs text-gray-400 hover:underline">View ↗</a>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-3 line-clamp-2">${escHtml(t.brief_summary || 'No summary available.')}</p>
+        <p class="text-xs text-gray-500 mb-3 line-clamp-2">${escHtml(t.brief_summary || 'No summary.')}</p>
         <div class="flex flex-wrap gap-2 text-xs">
-          ${t.conditions.slice(0,4).map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
+          ${t.conditions.slice(0, 4).map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
         </div>
         ${t.sponsor ? `<p class="text-xs text-gray-400 mt-2">Sponsor: ${escHtml(t.sponsor)}</p>` : ''}
-      </div>
-    `).join('');
-  } catch(e) {
-    list.innerHTML = `<div class="text-red-500 text-sm py-4">Error loading trials: ${escHtml(e.message)}</div>`;
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`;
   }
 }
 
-// ── Trial Drawer ────────────────────────────────────────────────────
+// ── Trial Drawer ──────────────────────────────────────────────────────
 async function openTrialDrawer(nctId) {
   const drawer = document.getElementById('trial-drawer');
   const overlay = document.getElementById('drawer-overlay');
   const content = document.getElementById('drawer-content');
-  const title   = document.getElementById('drawer-title');
-
-  title.textContent = nctId;
+  document.getElementById('drawer-title').textContent = nctId;
   content.innerHTML = '<div class="text-gray-400 py-8 text-center">Loading…</div>';
   drawer.classList.remove('hidden');
   drawer.classList.add('drawer-enter');
@@ -620,49 +764,48 @@ async function openTrialDrawer(nctId) {
 
   try {
     const r = await fetch(API + '/v1/trials/' + encodeURIComponent(nctId));
-    if (!r.ok) {
-      content.innerHTML = '<p class="text-gray-400">Trial details not available.</p>';
-      return;
-    }
-    const trial = await r.json();
-
-    title.textContent = trial.nct_id;
+    if (!r.ok) { content.innerHTML = '<p class="text-gray-400">Trial details not available.</p>'; return; }
+    const t = await r.json();
+    document.getElementById('drawer-title').textContent = t.nct_id;
     content.innerHTML = `
       <div class="mb-5">
         <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Title</p>
-        <p class="font-semibold text-gray-900 leading-snug">${escHtml(trial.title)}</p>
+        <p class="font-semibold text-gray-900 leading-snug">${escHtml(t.title)}</p>
       </div>
       <div class="flex flex-wrap gap-2 mb-5">
-        ${badgeHtml(trial.status, 'badge-recruiting')}
-        ${trial.phase ? badgeHtml(trial.phase, 'bg-blue-50 text-blue-700') : ''}
-        ${trial.sponsor ? `<span class="text-xs text-gray-500">Sponsor: ${escHtml(trial.sponsor)}</span>` : ''}
+        ${badgeHtml(t.status, 'badge-recruiting')}
+        ${t.phase ? badgeHtml(t.phase, 'bg-blue-50 text-blue-700') : ''}
+        ${t.sponsor ? `<span class="text-xs text-gray-500">Sponsor: ${escHtml(t.sponsor)}</span>` : ''}
       </div>
-      ${trial.brief_summary ? `
+      ${t.brief_summary ? `
         <div class="mb-5">
           <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Summary</p>
-          <p class="text-sm text-gray-700 leading-relaxed">${escHtml(trial.brief_summary)}</p>
+          <p class="text-sm text-gray-700 leading-relaxed">${escHtml(t.brief_summary)}</p>
         </div>` : ''}
-      ${trial.conditions.length ? `
+      ${t.conditions && t.conditions.length ? `
         <div class="mb-5">
           <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Conditions</p>
           <div class="flex flex-wrap gap-2">
-            ${trial.conditions.map(c => `<span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
+            ${t.conditions.map(c => `<span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">${escHtml(c)}</span>`).join('')}
           </div>
         </div>` : ''}
-      ${trial.locations && trial.locations.length ? `
+      ${t.eligibility_text ? `
         <div class="mb-5">
-          <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Locations (${trial.locations.length})</p>
+          <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Eligibility Criteria</p>
+          <pre class="text-xs text-gray-700 bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto leading-relaxed">${escHtml(t.eligibility_text)}</pre>
+        </div>` : ''}
+      ${t.locations && t.locations.length ? `
+        <div class="mb-5">
+          <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-medium">Locations (${t.locations.length})</p>
           <div class="text-xs text-gray-700 space-y-0.5 max-h-28 overflow-y-auto">
-            ${trial.locations.map(l => `<p>${escHtml(l)}</p>`).join('')}
+            ${t.locations.map(l => `<p>${escHtml(l)}</p>`).join('')}
           </div>
         </div>` : ''}
-      <div class="flex gap-4 mt-6">
-        <a href="https://clinicaltrials.gov/study/${escHtml(trial.nct_id)}" target="_blank"
-          class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg transition-colors">
-          View on ClinicalTrials.gov ↗
-        </a>
-      </div>`;
-  } catch(e) {
+      <a href="https://clinicaltrials.gov/study/${escHtml(t.nct_id)}" target="_blank"
+        class="inline-block mt-2 text-sm bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg transition-colors">
+        View on ClinicalTrials.gov ↗
+      </a>`;
+  } catch (e) {
     content.innerHTML = `<p class="text-red-500">Error: ${escHtml(e.message)}</p>`;
   }
 }
@@ -672,392 +815,8 @@ function closeDrawer() {
   document.getElementById('drawer-overlay').classList.add('hidden');
 }
 
-// ── Patients ────────────────────────────────────────────────────────
-function switchPatientTab(tab) {
-  ['list','fhir','note'].forEach(t => {
-    document.getElementById('ptab-'+t+'-content').classList.toggle('hidden', t !== tab);
-    document.getElementById('ptab-'+t).className = `px-5 py-3 text-sm ${t===tab?'tab-active':'tab-inactive'}`;
-  });
-  if (tab === 'list') loadPatientList(patientOffset);
-}
-
-async function loadPatientList(offset=0) {
-  patientOffset = offset;
-  const el = document.getElementById('patients-list');
-  const countEl = document.getElementById('patients-count');
-  el.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
-
-  try {
-    const r = await fetch(API + `/v1/patients?limit=20&offset=${offset}`);
-    const d = await r.json();
-    if (!r.ok) {
-      el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(d.detail || r.status)}</div>`;
-      return;
-    }
-    const patients = d.patients || [];
-    const total = d.total || 0;
-    countEl.textContent = `${total} patient${total !== 1 ? 's' : ''} ingested`;
-
-    document.getElementById('patients-prev').disabled = offset <= 0;
-    document.getElementById('patients-next').disabled = offset + 20 >= total;
-
-    if (!patients.length) {
-      el.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No patients ingested yet. Use FHIR R4 Bundle or Clinical Note tabs to add patients.</div>';
-      return;
-    }
-
-    el.innerHTML = patients.map(p => `
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap mb-1">
-              <span class="font-mono text-xs font-semibold text-brand-700">${escHtml(p.patient_id)}</span>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${escHtml(p.source_type)}</span>
-              <span class="text-xs text-gray-400">${escHtml(p.gender || '—')}${p.age_years ? ' · ' + Math.round(p.age_years) + 'y' : ''}</span>
-            </div>
-            <p class="text-sm text-gray-700 line-clamp-2">${escHtml(p.clinical_summary || 'No summary')}</p>
-            <p class="text-xs text-gray-400 mt-1">Ingested ${fmtTs(p.created_at)}</p>
-          </div>
-          <button onclick="prefillMatch('${escHtml(p.patient_id)}')"
-            class="shrink-0 text-xs bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-            → Match
-          </button>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`;
-  }
-}
-
-function fillDemoFHIR() {
-  document.getElementById('fhir-input').value = JSON.stringify({
-    resourceType: "Bundle", type: "collection",
-    entry: [
-      {resource:{resourceType:"Patient",id:"demo-patient-001",birthDate:"1972-06-10",gender:"male"}},
-      {resource:{resourceType:"Condition",code:{coding:[{system:"http://hl7.org/fhir/sid/icd-10",code:"E11",display:"Type 2 diabetes mellitus"}],text:"Type 2 diabetes mellitus"},clinicalStatus:{text:"Active"}}},
-      {resource:{resourceType:"Observation",code:{text:"HbA1c"},valueQuantity:{value:8.5,unit:"%"},effectiveDateTime:"2025-03-01"}},
-      {resource:{resourceType:"MedicationStatement",medicationCodeableConcept:{text:"Metformin"},status:"active"}}
-    ]
-  }, null, 2);
-}
-
-function fillDemoNote() {
-  document.getElementById('note-patient-id').value = 'note-patient-001';
-  document.getElementById('note-input').value =
-`Patient is a 58-year-old female with a 12-year history of type 2 diabetes mellitus (ICD-10: E11). She presents for routine follow-up.
-
-Current medications: Metformin 1000mg twice daily, Lisinopril 10mg daily.
-
-Recent labs (2025-02-15):
-- HbA1c: 7.8%
-- eGFR: 72 mL/min
-- Fasting glucose: 142 mg/dL
-
-No history of cardiovascular disease, renal failure, or malignancy. Non-smoker. BMI 29.4.
-
-Assessment: Type 2 DM, suboptimally controlled. Consider intensification of therapy.`;
-}
-
-async function ingestFHIR() {
-  const raw = document.getElementById('fhir-input').value.trim();
-  if (!raw) { toast('Paste a FHIR bundle JSON'); return; }
-  let body;
-  try { body = JSON.parse(raw); } catch(e) { toast('Invalid JSON: ' + e.message); return; }
-
-  setLoading('fhir-btn', true);
-  try {
-    const r = await fetch(API+'/v1/patients/fhir', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-    });
-    const d = await r.json();
-    if (!r.ok) { toast('Error: ' + (d.detail || r.status)); return; }
-    showPatientResult(d);
-    toast('Patient ingested: ' + d.patient_id);
-  } catch(e) { toast('Error: '+e.message); }
-  finally { setLoading('fhir-btn', false); }
-}
-
-async function ingestNote() {
-  const note = document.getElementById('note-input').value.trim();
-  const pid  = document.getElementById('note-patient-id').value.trim();
-  if (!note) { toast('Enter a clinical note'); return; }
-
-  setLoading('note-btn', true);
-  try {
-    const r = await fetch(API+'/v1/patients/note', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ note_text: note, patient_id: pid || undefined })
-    });
-    const d = await r.json();
-    if (!r.ok) { toast('Error: ' + (d.detail || r.status)); return; }
-    showPatientResult(d);
-    toast('Patient extracted & ingested: ' + d.patient_id);
-  } catch(e) { toast('Error: '+e.message); }
-  finally { setLoading('note-btn', false); }
-}
-
-function showPatientResult(d) {
-  const el = document.getElementById('patient-result');
-  el.classList.remove('hidden');
-  el.innerHTML = `
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-gray-800">Patient Ingested</h2>
-        <button onclick="prefillMatch('${escHtml(d.patient_id)}')"
-          class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-4 py-1.5 rounded-lg transition-colors">
-          → Run Match
-        </button>
-      </div>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Patient ID</span><span class="font-mono font-semibold text-brand-700">${escHtml(d.patient_id)}</span></div>
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Age</span><span>${d.age_years ? Math.round(d.age_years) + ' years' : '—'}</span></div>
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Gender</span><span class="capitalize">${escHtml(d.gender)}</span></div>
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Diagnoses</span><span>${d.diagnoses_count}</span></div>
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Medications</span><span>${d.medications_count}</span></div>
-          <div class="flex gap-2 text-sm"><span class="text-gray-500 w-36 shrink-0">Lab Values</span><span>${d.lab_values_count}</span></div>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Clinical Summary</p>
-          <p class="text-sm text-gray-800 bg-gray-50 rounded-lg p-3">${escHtml(d.clinical_summary)}</p>
-          <div class="flex items-center gap-2 mt-3">
-            <span class="text-xs text-gray-500">Extraction:</span>
-            <span class="text-xs font-medium text-gray-700">${escHtml(d.extraction_method)}</span>
-            <span class="text-xs text-gray-400">(${Math.round(d.extraction_confidence*100)}% confidence)</span>
-          </div>
-          ${d.warnings.length ? `<p class="text-xs text-yellow-600 mt-2">⚠ ${escHtml(d.warnings.join(', '))}</p>` : ''}
-        </div>
-      </div>
-    </div>`;
-}
-
-function prefillMatch(patientId) {
-  document.getElementById('match-patient-id').value = patientId;
-  document.getElementById('history-patient-id').value = patientId;
-  showSection('match');
-  switchMatchTab('match');
-}
-
-// ── Match ────────────────────────────────────────────────────────────
-function switchMatchTab(tab) {
-  ['match','history'].forEach(t => {
-    document.getElementById('mtab-'+t+'-content').classList.toggle('hidden', t !== tab);
-    document.getElementById('mtab-'+t).className = `px-5 py-3 text-sm ${t===tab?'tab-active':'tab-inactive'}`;
-  });
-}
-
-async function runMatch() {
-  const patientId = document.getElementById('match-patient-id').value.trim();
-  if (!patientId) { toast('Enter a Patient ID'); return; }
-
-  const maxResults = parseInt(document.getElementById('match-max').value) || 10;
-  const minScore   = parseFloat(document.getElementById('match-min-score').value) || 0.2;
-  const statusVal  = document.getElementById('match-status').value;
-
-  setLoading('match-btn', true);
-  const results = document.getElementById('match-results');
-  results.innerHTML = `
-    <div class="flex items-center gap-3 text-gray-500 text-sm py-6">
-      <svg class="spinner w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-      </svg>
-      Running AI matching pipeline…
-    </div>`;
-
-  try {
-    const body = { patient_id: patientId, max_results: maxResults, min_score: minScore };
-    if (statusVal) body.trial_status_filter = [statusVal];
-    else body.trial_status_filter = ['RECRUITING','NOT_YET_RECRUITING','ACTIVE_NOT_RECRUITING','COMPLETED'];
-
-    const r = await fetch(API+'/v1/match', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-    });
-    const d = await r.json();
-    if (!r.ok) { results.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || 'Error '+r.status)}</div>`; return; }
-    renderMatchResults(d, results);
-  } catch(e) { results.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`; }
-  finally { setLoading('match-btn', false); }
-}
-
-function renderMatchResults(d, container) {
-  if (!d.matches.length) {
-    container.innerHTML = `<div class="text-gray-400 text-sm py-8 text-center">No matches found above the minimum score threshold.</div>`;
-    return;
-  }
-
-  const exportBtn = `<button onclick="exportMatchCsv(window._lastMatchData)" class="text-xs border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-    Export CSV
-  </button>`;
-
-  const header = `
-    <div class="flex items-center justify-between mb-4">
-      <p class="text-sm text-gray-600"><span class="font-semibold text-gray-900">${d.matches.length}</span> matches in <span class="font-semibold">${d.processing_time_ms.toFixed(0)}ms</span> · Patient: <span class="font-mono text-xs text-brand-700">${escHtml(d.patient_id)}</span></p>
-      ${exportBtn}
-    </div>`;
-
-  window._lastMatchData = d;
-
-  const cards = d.matches.map((m, i) => {
-    const exp = m.explanation || {};
-    const statusBadge = { eligible:'badge-high', likely_eligible:'badge-medium', potentially_eligible:'badge-low', ineligible:'badge-ineligible' }[m.status] || 'badge-low';
-    const confBadge   = { high:'badge-high', medium:'badge-medium', low:'badge-low' }[m.confidence] || 'badge-low';
-    const statusLabel = (m.status||'').replace(/_/g,' ');
-
-    const passedHtml = (exp.passed_constraints||[]).slice(0,6).map(c =>
-      `<div class="constraint-pass bg-green-50 rounded px-3 py-2 text-xs text-gray-700">${escHtml(c.criterion)}</div>`
-    ).join('');
-
-    const failedHtml = (exp.failed_constraints||[]).slice(0,6).map(c => `
-      <div class="constraint-fail bg-red-50 rounded px-3 py-2 text-xs text-gray-700">
-        <span class="font-medium">${escHtml(c.criterion)}</span>
-        <span class="block text-gray-500 mt-0.5">${escHtml(c.reason||'')}</span>
-      </div>`).join('');
-
-    const disqualHtml = (exp.disqualifying_factors||[]).length ? `
-      <div class="mt-3 p-3 bg-red-50 rounded-lg">
-        <p class="text-xs font-semibold text-red-600 mb-1">Disqualifying Factors</p>
-        ${(exp.disqualifying_factors).map(f => `<p class="text-xs text-red-700">• ${escHtml(f)}</p>`).join('')}
-      </div>` : '';
-
-    return `
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in mb-4">
-        <div class="flex items-start gap-4 mb-4">
-          <div class="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold text-sm shrink-0">${i+1}</div>
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap gap-2 items-center mb-1">
-              <span class="text-xs font-mono text-gray-400">${escHtml(m.nct_id)}</span>
-              ${badgeHtml(statusLabel, statusBadge)}
-              ${badgeHtml((m.confidence||'') + ' confidence', confBadge)}
-            </div>
-            <h3 class="font-semibold text-gray-900 text-sm leading-snug">${escHtml(m.trial_title||m.nct_id)}</h3>
-          </div>
-          <a href="https://clinicaltrials.gov/study/${escHtml(m.nct_id)}" target="_blank"
-            class="shrink-0 text-xs text-brand-600 hover:underline">View ↗</a>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-          <div><p class="text-xs text-gray-500 mb-1">Composite</p>${scoreBar(exp.composite_score)}</div>
-          <div><p class="text-xs text-gray-500 mb-1">Semantic</p>${scoreBar(exp.semantic_score)}</div>
-          <div><p class="text-xs text-gray-500 mb-1">Constraints</p>${scoreBar(exp.constraint_score)}</div>
-        </div>
-
-        ${disqualHtml}
-
-        <button onclick="toggleConstraints('${escHtml(m.match_id)}')" class="text-xs text-brand-600 hover:underline mt-3 flex items-center gap-1">
-          <svg id="chevron-${escHtml(m.match_id)}" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-          Show constraints (${(exp.passed_constraints||[]).length} passed, ${(exp.failed_constraints||[]).length} failed)
-        </button>
-
-        <div id="constraints-${escHtml(m.match_id)}" class="hidden mt-3">
-          ${(exp.failed_constraints||[]).length ? `<p class="text-xs font-semibold text-red-600 mb-2">Failed</p><div class="space-y-1 mb-4">${failedHtml}</div>` : ''}
-          ${(exp.passed_constraints||[]).length ? `<p class="text-xs font-semibold text-green-600 mb-2">Passed</p><div class="space-y-1">${passedHtml}</div>` : ''}
-        </div>
-      </div>`;
-  }).join('');
-
-  container.innerHTML = header + cards;
-}
-
-function toggleConstraints(matchId) {
-  const el = document.getElementById('constraints-'+matchId);
-  const ch = document.getElementById('chevron-'+matchId);
-  const hidden = el.classList.toggle('hidden');
-  ch.style.transform = hidden ? 'rotate(0deg)' : 'rotate(90deg)';
-}
-
-// ── CSV Export ──────────────────────────────────────────────────────
-function exportMatchCsv(data) {
-  if (!data || !data.matches.length) { toast('No match results to export'); return; }
-  const rows = [
-    ['rank','match_id','nct_id','trial_title','composite_score','semantic_score','constraint_score','confidence','status','passed','failed'],
-    ...data.matches.map((m, i) => {
-      const exp = m.explanation || {};
-      return [
-        i+1,
-        m.match_id,
-        m.nct_id,
-        `"${(m.trial_title||'').replace(/"/g,'""')}"`,
-        (exp.composite_score||0).toFixed(4),
-        (exp.semantic_score||0).toFixed(4),
-        (exp.constraint_score||0).toFixed(4),
-        m.confidence,
-        m.status,
-        (exp.passed_constraints||[]).length,
-        (exp.failed_constraints||[]).length,
-      ];
-    })
-  ];
-  const csv = rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `match-results-${data.patient_id}-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('CSV exported');
-}
-
-// ── Match History ───────────────────────────────────────────────────
-async function loadMatchHistory() {
-  const pid = document.getElementById('history-patient-id').value.trim();
-  if (!pid) { toast('Enter a Patient ID'); return; }
-
-  setLoading('history-btn', true);
-  const el = document.getElementById('match-history-results');
-  el.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
-
-  try {
-    const r = await fetch(API + '/v1/match/history/' + encodeURIComponent(pid));
-    const d = await r.json();
-    if (!r.ok) { el.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || 'Error '+r.status)}</div>`; return; }
-
-    if (!d.results || !d.results.length) {
-      el.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No match history for this patient.</div>';
-      return;
-    }
-
-    const exportBtn = `<button onclick="exportMatchCsv({patient_id:'${escHtml(pid)}',matches:window._historyData})" class="text-xs border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">Export CSV</button>`;
-    window._historyData = d.results;
-
-    el.innerHTML = `
-      <div class="flex justify-between items-center mb-4">
-        <p class="text-sm text-gray-600"><span class="font-semibold">${d.total}</span> past match${d.total!==1?'es':''} for <span class="font-mono text-brand-700 text-xs">${escHtml(pid)}</span></p>
-        ${exportBtn}
-      </div>` +
-      d.results.map(m => {
-        const exp = m.explanation || {};
-        const statusBadge = { eligible:'badge-high', likely_eligible:'badge-medium', potentially_eligible:'badge-low', ineligible:'badge-ineligible' }[m.status] || 'badge-low';
-        return `
-          <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-3 fade-in">
-            <div class="flex items-start gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap gap-2 items-center mb-1">
-                  <span class="text-xs font-mono text-gray-400">${escHtml(m.nct_id)}</span>
-                  ${badgeHtml((m.status||'').replace(/_/g,' '), statusBadge)}
-                </div>
-                <h3 class="text-sm font-semibold text-gray-900">${escHtml(m.trial_title||m.nct_id)}</h3>
-                <p class="text-xs text-gray-400 mt-1">${fmtTs(m.created_at)}</p>
-              </div>
-              <div class="text-right shrink-0">
-                <p class="text-2xl font-bold text-gray-800">${Math.round((exp.composite_score||0)*100)}%</p>
-                <p class="text-xs text-gray-400">${escHtml(m.confidence||'—')}</p>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-  } catch(e) { el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(e.message)}</div>`; }
-  finally { setLoading('history-btn', false); }
-}
-
-// ── Init ────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────
 loadHealth();
-loadAllConditions();
 </script>
 </body>
 </html>

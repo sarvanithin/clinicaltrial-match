@@ -120,6 +120,33 @@ class AutocompleteResponse(BaseModel):
     suggestions: list[str]
 
 
+class LiveMatchRequest(BaseModel):
+    """Ephemeral match — patient data processed in memory, never stored."""
+
+    source: str  # "fhir" or "note"
+    fhir_data: dict[str, Any] | None = None
+    note_text: str | None = None
+    patient_label: str | None = None
+    max_results: int = 10
+    min_score: float = 0.2
+    trial_status_filter: list[str] = Field(default_factory=lambda: ["RECRUITING"])
+
+
+class LiveMatchResponse(BaseModel):
+    patient_label: str
+    age_years: float | None
+    gender: str
+    diagnoses_count: int
+    medications_count: int
+    lab_values_count: int
+    clinical_summary: str
+    extraction_confidence: float
+    matches: list[Any]
+    total_evaluated: int
+    processing_time_ms: float
+    privacy_notice: str = "Patient data processed in memory only — nothing stored"
+
+
 class HealthResponse(BaseModel):
     status: str
     dependencies: dict[str, bool]

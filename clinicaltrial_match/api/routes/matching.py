@@ -9,13 +9,81 @@ import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from clinicaltrial_match.api.models import BatchMatchRequest, BatchMatchResponse, MatchResponse
+from clinicaltrial_match.api.models import BatchMatchRequest, BatchMatchResponse, LiveMatchRequest, LiveMatchResponse, MatchResponse
 from clinicaltrial_match.matching.engine import MatchingEngine
 from clinicaltrial_match.matching.models import MatchExplanation, MatchRequest, MatchResult
 from clinicaltrial_match.patients.repository import PatientRepository
 
 router = APIRouter()
 logger = structlog.get_logger()
+
+
+@router.post("/live", response_model=LiveMatchResponse)
+async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchResponse:
+    """Ephemeral match — patient data is never written to disk or database."""
+    if body.source not in ("fhir", "note"):
+        return JSONResponse(status_code=422, content={"detail": "source must be 'fhir' or 'note'"})  # type: ignore[return-value]
+    if body.max_results < 1 or body.max_results > 50:
+        return JSONResponse(status_code=422, content={"detail": "max_results must be between 1 and 50"})  # type: ignore[return-value]
+    if body.min_score < 0.0 or body.min_score > 1.0:
+        return JSONResponse(status_code=422, content={"detail": "min_score must be between 0.0 and 1.0"})  # type: ignore[return-value]
+
+    engine: MatchingEngine = request.app.state.matching_engine
+    start = time.time()
+
+    # Extract features in-memory — no DB write
+    try:
+        if body.source == "fhir":
+            if not body.fhir_data:
+                return JSONResponse(status_code=422, content={"detail": "fhir_data is required when source='fhir'"})  # type: ignore[return-value]
+            from clinicaltrial_match.patients.fhir_parser import parse_fhir_bundle
+            patient = parse_fhir_bundle(body.fhir_data)
+        else:
+            if not body.note_text or not body.note_text.strip():
+                return JSONResponse(status_code=422, content={"detail": "note_text is required when source='note'"})  # type: ignore[return-value]
+            extractor = request.app.state.note_extractor
+            patient = await extractor.extract(body.note_text, patient_id="_ephemeral")
+    except Exception as exc:
+        logger.error("live_match_extract_error", source=body.source, error=str(exc))
+        return JSONResponse(status_code=422, content={"detail": f"Feature extraction failed: {exc}"})  # type: ignore[return-value]
+
+    if not patient.features:
+        return JSONResponse(status_code=422, content={"detail": "Could not extract patient features"})  # type: ignore[return-value]
+
+    f = patient.features
+
+    match_req = MatchRequest(
+        patient_id="_ephemeral",
+        max_results=body.max_results,
+        min_score=body.min_score,
+        trial_status_filter=body.trial_status_filter,
+    )
+
+    try:
+        # persist=False — nothing written to DB
+        results = await engine.match(f, match_req, persist=False)
+    except Exception as exc:
+        logger.error("live_match_engine_error", error=str(exc))
+        return JSONResponse(status_code=500, content={"detail": "Matching failed — please try again"})  # type: ignore[return-value]
+
+    elapsed_ms = (time.time() - start) * 1000
+    label = body.patient_label or f"{int(f.age_years or 0)}y {f.gender.value}"
+
+    logger.info("live_match_completed", results=len(results), elapsed_ms=round(elapsed_ms, 1))
+
+    return LiveMatchResponse(
+        patient_label=label,
+        age_years=f.age_years,
+        gender=f.gender.value,
+        diagnoses_count=len(f.diagnoses),
+        medications_count=len(f.medications),
+        lab_values_count=len(f.lab_values),
+        clinical_summary=f.clinical_summary,
+        extraction_confidence=f.extraction_confidence,
+        matches=[r.model_dump() for r in results],
+        total_evaluated=len(results),
+        processing_time_ms=round(elapsed_ms, 1),
+    )
 
 
 @router.post("", response_model=MatchResponse)

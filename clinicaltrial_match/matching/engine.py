@@ -48,7 +48,7 @@ class MatchingEngine:
         self._claude = claude
         self._evaluator = ConstraintEvaluator()
 
-    async def match(self, features: PatientFeatures, request: MatchRequest) -> list[MatchResult]:
+    async def match(self, features: PatientFeatures, request: MatchRequest, persist: bool = True) -> list[MatchResult]:
         candidate_k = request.max_results * 3
         candidates = self._searcher.search(features, top_k=candidate_k)
 
@@ -90,19 +90,19 @@ class MatchingEngine:
 
             if result.composite_score >= request.min_score:
                 results.append(result)
-                # Persist
-                self._db.insert_match_result(
-                    {
-                        "match_id": match_id,
-                        "patient_id": features.patient_id,
-                        "nct_id": nct_id,
-                        "composite_score": result.composite_score,
-                        "confidence": result.confidence,
-                        "explanation": result.explanation.model_dump_json(),
-                        "status": result.status,
-                        "created_at": result.created_at,
-                    }
-                )
+                if persist:
+                    self._db.insert_match_result(
+                        {
+                            "match_id": match_id,
+                            "patient_id": features.patient_id,
+                            "nct_id": nct_id,
+                            "composite_score": result.composite_score,
+                            "confidence": result.confidence,
+                            "explanation": result.explanation.model_dump_json(),
+                            "status": result.status,
+                            "created_at": result.created_at,
+                        }
+                    )
 
         results.sort(key=lambda r: r.composite_score, reverse=True)
         return results[: request.max_results]
