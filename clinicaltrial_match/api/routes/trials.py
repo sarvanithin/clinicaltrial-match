@@ -76,6 +76,32 @@ async def list_trials(
     )
 
 
+@router.get("/{nct_id}")
+async def get_trial(request: Request, nct_id: str) -> dict:
+    try:
+        db = request.app.state.db
+        row = db.get_trial(nct_id)
+    except Exception as exc:
+        logger.error("get_trial_error", nct_id=nct_id, error=str(exc))
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})  # type: ignore[return-value]
+    if not row:
+        return JSONResponse(status_code=404, content={"detail": "Trial not found"})  # type: ignore[return-value]
+    return {
+        "nct_id": row["nct_id"],
+        "title": row["title"],
+        "brief_summary": row.get("brief_summary", ""),
+        "conditions": _parse_json_col(row.get("conditions")),
+        "interventions": _parse_json_col(row.get("interventions")),
+        "phase": row.get("phase", ""),
+        "status": row.get("status", ""),
+        "sponsor": row.get("sponsor", ""),
+        "locations": _parse_json_col(row.get("locations")),
+        "eligibility_text": row.get("eligibility_text", ""),
+        "start_date": row.get("start_date"),
+        "last_updated": row.get("last_updated"),
+    }
+
+
 @router.post("/sync", response_model=SyncResponse, status_code=202)
 async def sync_trials(request: Request, body: SyncRequest) -> SyncResponse:
     if not body.condition or len(body.condition) > 200:

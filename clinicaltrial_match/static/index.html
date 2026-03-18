@@ -619,16 +619,12 @@ async function openTrialDrawer(nctId) {
   overlay.classList.remove('hidden');
 
   try {
-    const r = await fetch(API + '/v1/trials?limit=1&condition=' + encodeURIComponent(nctId));
-    // Fetch the specific trial via the DB row — use a direct GET if available
-    // Fall back to listing and finding it
-    const d = await r.json();
-    const trial = d.trials && d.trials.find(t => t.nct_id === nctId);
-
-    if (!trial) {
-      content.innerHTML = '<p class="text-gray-400">Trial details not found.</p>';
+    const r = await fetch(API + '/v1/trials/' + encodeURIComponent(nctId));
+    if (!r.ok) {
+      content.innerHTML = '<p class="text-gray-400">Trial details not available.</p>';
       return;
     }
+    const trial = await r.json();
 
     title.textContent = trial.nct_id;
     content.innerHTML = `
@@ -694,17 +690,23 @@ async function loadPatientList(offset=0) {
   try {
     const r = await fetch(API + `/v1/patients?limit=20&offset=${offset}`);
     const d = await r.json();
-    countEl.textContent = `${d.total} patient${d.total !== 1 ? 's' : ''} ingested`;
+    if (!r.ok) {
+      el.innerHTML = `<div class="text-red-500 text-sm py-4">Error: ${escHtml(d.detail || r.status)}</div>`;
+      return;
+    }
+    const patients = d.patients || [];
+    const total = d.total || 0;
+    countEl.textContent = `${total} patient${total !== 1 ? 's' : ''} ingested`;
 
     document.getElementById('patients-prev').disabled = offset <= 0;
-    document.getElementById('patients-next').disabled = offset + 20 >= d.total;
+    document.getElementById('patients-next').disabled = offset + 20 >= total;
 
-    if (!d.patients.length) {
+    if (!patients.length) {
       el.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No patients ingested yet. Use FHIR R4 Bundle or Clinical Note tabs to add patients.</div>';
       return;
     }
 
-    el.innerHTML = d.patients.map(p => `
+    el.innerHTML = patients.map(p => `
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in">
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
