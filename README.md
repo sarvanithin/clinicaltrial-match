@@ -4,6 +4,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/sarvanithin/clinicaltrial-match)
 
 **AI-powered clinical trial matching — privacy-first, open source.**
 
@@ -80,6 +81,14 @@ python -m clinicaltrial_match serve
 ```bash
 ANTHROPIC_API_KEY=sk-ant-... docker-compose -f docker/docker-compose.yml up
 ```
+
+### Deploy publicly (Render.com — free)
+
+1. Click **Deploy to Render** badge above
+2. In the Render dashboard, set the `ANTHROPIC_API_KEY` environment variable (marked secret — never stored in git)
+3. Click **Deploy** — you get a live URL like `https://clinicaltrial-match.onrender.com`
+
+The API key is stored securely in Render's environment secrets, not in the codebase.
 
 ---
 

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: clinicaltrial-match
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /v1/health
+    disk:
+      name: ctm-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false          # set this manually in the Render dashboard — never committed to git
+      - key: CTM_DB__PATH
+        value: /data/clinicaltrial_match.db
+      - key: CTM_API__HOST
+        value: 0.0.0.0
+      - key: CTM_API__PORT
+        value: "8000"
+      - key: CTM_API__LOG_LEVEL
+        value: INFO
