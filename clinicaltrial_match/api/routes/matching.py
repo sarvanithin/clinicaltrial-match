@@ -9,7 +9,13 @@ import structlog
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from clinicaltrial_match.api.models import BatchMatchRequest, BatchMatchResponse, LiveMatchRequest, LiveMatchResponse, MatchResponse
+from clinicaltrial_match.api.models import (
+    BatchMatchRequest,
+    BatchMatchResponse,
+    LiveMatchRequest,
+    LiveMatchResponse,
+    MatchResponse,
+)
 from clinicaltrial_match.matching.engine import MatchingEngine
 from clinicaltrial_match.matching.models import MatchExplanation, MatchRequest, MatchResult
 from clinicaltrial_match.patients.repository import PatientRepository
@@ -37,6 +43,7 @@ async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchRespo
             if not body.fhir_data:
                 return JSONResponse(status_code=422, content={"detail": "fhir_data is required when source='fhir'"})  # type: ignore[return-value]
             from clinicaltrial_match.patients.fhir_parser import parse_fhir_bundle
+
             patient = parse_fhir_bundle(body.fhir_data)
         else:
             if not body.note_text or not body.note_text.strip():

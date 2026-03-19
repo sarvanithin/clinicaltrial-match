@@ -5,53 +5,51 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-AI-powered clinical trial matching from patient records. Connects eligible patients to open trials using semantic search and structured eligibility constraint evaluation.
+**AI-powered clinical trial matching — privacy-first, open source.**
+
+Upload a patient record (FHIR R4 bundle or clinical note), get back ranked matching trials from ClinicalTrials.gov in seconds. **Patient data is never stored** — processed in memory and discarded after matching.
 
 ---
 
-## Features
-
-- **Trial sync** — Fetch from ClinicalTrials.gov API v2 (400K+ trials) by condition
-- **Eligibility parsing** — Two-stage: regex pre-parse + Claude Haiku tool-use → structured JSON constraints
-- **Patient ingestion** — FHIR R4 bundles or unstructured clinical notes (Claude extraction)
-- **Semantic matching** — `all-MiniLM-L6-v2` embeddings, numpy cosine (FAISS at >5k trials)
-- **Constraint evaluation** — Age, gender, diagnosis (fuzzy + ICD-10), labs, medications
-- **Composite ranking** — 40% semantic + 60% constraint satisfaction with confidence tiers
-- **Plain-English explanations** — Per-constraint pass/fail with disqualifying factors
-- **Web UI** — Single-page app with trial browser, patient ingestion, match results
-- **REST API** — FastAPI with OpenAPI docs at `/docs`
-- **Docker** — Production-ready container with health checks
-
----
-
-## Architecture
+## How it works
 
 ```
-clinicaltrial_match/
-├── trials/          # ClinicalTrials.gov fetcher, eligibility parser, trial repo
-├── patients/        # FHIR R4 parser, clinical note extractor, patient repo
-├── matching/        # Semantic searcher, constraint evaluator, ranker, engine
-├── infrastructure/  # SQLite DB, embedding index, Claude client
-└── api/             # FastAPI app, routes, middleware, models
+Your patient data (FHIR / note)
+        │
+        ▼  extracted in-memory, never written to disk
+  PatientFeatures
+        │
+        ├── Semantic search — all-MiniLM-L6-v2 embeddings against 400K+ trials
+        │
+        └── Constraint evaluation — age · gender · diagnosis · labs · medications
+                │
+                ▼
+        Ranked matches with plain-English explanations
+        (patient data discarded immediately after)
 ```
-
-**Matching pipeline:**
-1. `POST /v1/patients/fhir` or `/v1/patients/note` → extract `PatientFeatures`
-2. `POST /v1/trials/sync` → fetch & parse trials from ClinicalTrials.gov
-3. `POST /v1/match` → semantic search (top K×3) → constraint filter → composite rank
 
 **Scoring:**
 ```
 composite = 0.40 × semantic_score + 0.60 × constraint_score
-high (eligible)          ≥ 0.80, no hard constraint failures
-medium (likely eligible) ≥ 0.60
-low (potentially)        ≥ 0.30
-ineligible               < 0.30
+
+≥ 0.80  →  High confidence / Eligible
+≥ 0.60  →  Medium / Likely eligible
+≥ 0.30  →  Low / Potentially eligible
+< 0.30  →  Filtered out
 ```
 
 ---
 
-## Quick Start
+## Privacy model
+
+- **No patient storage** — `POST /v1/match/live` processes everything in-memory with `persist=False`
+- **No patient database** — only ClinicalTrials.gov public data is cached in SQLite
+- **Open source** — full audit trail; you can run it on your own infrastructure
+- **API key auth** — optional `CTM_AUTH__API_KEY` to restrict access to your instance
+
+---
+
+## Quick start
 
 ### Prerequisites
 - Python 3.11+
@@ -63,11 +61,8 @@ ineligible               < 0.30
 git clone https://github.com/sarvanithin/clinicaltrial-match.git
 cd clinicaltrial-match
 
-# Core install
-pip install -e .
-
-# With NLP support (clinical note extraction)
-pip install -e ".[nlp]"
+pip install -e .                      # core
+pip install -e ".[nlp]"              # + clinical note extraction
 python -m spacy download en_core_web_sm
 ```
 
@@ -76,81 +71,97 @@ python -m spacy download en_core_web_sm
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 python -m clinicaltrial_match serve
-# → http://localhost:8000
-# → http://localhost:8000/docs  (Swagger UI)
-# → http://localhost:8000/ui    (Web UI)
+# Web UI  →  http://localhost:8000
+# API docs →  http://localhost:8000/docs
 ```
 
 ### Docker
 
 ```bash
-docker-compose -f docker/docker-compose.yml up
+ANTHROPIC_API_KEY=sk-ant-... docker-compose -f docker/docker-compose.yml up
 ```
 
 ---
 
-## API Reference
+## Try it — ephemeral match (no data stored)
+
+```bash
+# 1. Sync some trials first
+curl -X POST http://localhost:8000/v1/trials/sync \
+  -H 'Content-Type: application/json' \
+  -d '{"condition": "type 2 diabetes", "max_trials": 100}'
+
+# 2. Match from a clinical note — nothing written to DB
+curl -X POST http://localhost:8000/v1/match/live \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "source": "note",
+    "note_text": "65-year-old male with type 2 diabetes (HbA1c 8.2%) and hypertension.",
+    "max_results": 5
+  }'
+```
+
+Response includes:
+```json
+{
+  "patient_label": "65y male",
+  "privacy_notice": "Patient data processed in memory only — nothing stored",
+  "matches": [ ... ],
+  "processing_time_ms": 420.1
+}
+```
+
+---
+
+## API reference
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `POST` | `/v1/match/live` | **Ephemeral match** — FHIR or note → ranked trials, no storage |
 | `GET` | `/v1/trials` | List cached trials (filter: condition, status) |
-| `POST` | `/v1/trials/sync` | Trigger background trial sync from ClinicalTrials.gov |
-| `GET` | `/v1/trials/sync` | List recent sync jobs |
+| `POST` | `/v1/trials/sync` | Fetch trials from ClinicalTrials.gov (background job) |
 | `GET` | `/v1/trials/sync/{job_id}` | Poll sync job status |
-| `POST` | `/v1/trials/compare` | Side-by-side trial comparison (with optional patient constraints) |
-| `GET` | `/v1/trials/autocomplete` | Condition autocomplete from cached trials |
-| `POST` | `/v1/patients/fhir` | Ingest FHIR R4 Bundle, extract features |
-| `POST` | `/v1/patients/note` | Ingest clinical note text, extract features |
-| `GET` | `/v1/patients` | List ingested patients |
-| `POST` | `/v1/match` | Match patient to trials |
-| `POST` | `/v1/match/batch` | Batch match multiple patients |
-| `GET` | `/v1/match/history/{patient_id}` | Past match results for a patient |
-| `GET` | `/v1/match/{match_id}` | Retrieve specific match result |
-| `GET` | `/v1/health` | Health check + dependency status |
+| `GET` | `/v1/trials/{nct_id}` | Get single trial details |
+| `POST` | `/v1/trials/compare` | Side-by-side trial comparison |
+| `GET` | `/v1/trials/autocomplete` | Condition autocomplete |
+| `POST` | `/v1/match` | Match a stored patient (advanced use) |
+| `POST` | `/v1/match/batch` | Batch match multiple stored patients |
+| `GET` | `/v1/health` | Health check |
 
-### Example: ingest patient + match
+Full interactive docs at `/docs` (Swagger UI).
 
-```bash
-# Sync trials
-curl -X POST http://localhost:8000/v1/trials/sync \
-  -H 'Content-Type: application/json' \
-  -d '{"condition": "type 2 diabetes", "max_trials": 50}'
+---
 
-# Ingest patient
-curl -X POST http://localhost:8000/v1/patients/fhir \
-  -H 'Content-Type: application/json' \
-  -d @- <<'EOF'
-{
-  "resourceType": "Bundle", "type": "collection",
-  "entry": [
-    {"resource": {"resourceType": "Patient", "id": "p1", "birthDate": "1972-06-10", "gender": "male"}},
-    {"resource": {"resourceType": "Condition", "code": {"coding": [{"code": "E11", "display": "Type 2 diabetes mellitus"}]}}}
-  ]
-}
-EOF
+## Project structure
 
-# Match
-curl -X POST http://localhost:8000/v1/match \
-  -H 'Content-Type: application/json' \
-  -d '{"patient_id": "p1", "max_results": 10}'
+```
+clinicaltrial_match/
+├── trials/          # ClinicalTrials.gov fetcher · eligibility parser · trial repo
+├── patients/        # FHIR R4 parser · clinical note extractor
+├── matching/        # Semantic searcher · constraint evaluator · ranker · engine
+├── infrastructure/  # SQLite · embedding index · Claude client
+└── api/             # FastAPI app · routes · middleware · models
+tests/               # 81 unit tests, no external API calls
+docker/              # Dockerfile + docker-compose.yml
 ```
 
 ---
 
 ## Configuration
 
-Config file: `~/.clinicaltrial_match/config.json` — overridable via env vars (prefix `CTM_`, delimiter `__`):
+All settings via environment variables (prefix `CTM_`, delimiter `__`):
 
-```bash
-export CTM_CLAUDE__FAST_MODEL=claude-haiku-4-5-20251001
-export CTM_CLAUDE__REASONING_MODEL=claude-sonnet-4-6-20251101
-export CTM_TRIALS__PAGE_SIZE=100
-export CTM_TRIALS__MAX_TRIALS_PER_SYNC=1000
-export CTM_EMBEDDING__USE_FAISS=true          # for >5k trials
-export CTM_DB__PATH=/data/ctm.db
-export CTM_AUTH__API_KEY=my-secret-key        # optional API key auth
-export CTM_API__LOG_LEVEL=INFO
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | required | Anthropic API key |
+| `CTM_DB__PATH` | `~/.clinicaltrial_match/data.db` | SQLite path |
+| `CTM_CLAUDE__FAST_MODEL` | `claude-haiku-4-5-20251001` | Model for parsing |
+| `CTM_CLAUDE__REASONING_MODEL` | `claude-sonnet-4-6-20251101` | Model for reasoning |
+| `CTM_EMBEDDING__USE_FAISS` | `false` | Use FAISS for >5k trials |
+| `CTM_AUTH__API_KEY` | unset | Optional API key for all `/v1/*` routes |
+| `CTM_API__LOG_LEVEL` | `INFO` | Log level |
+
+See `.env.example` for a full list.
 
 ---
 
@@ -159,30 +170,24 @@ export CTM_API__LOG_LEVEL=INFO
 ```bash
 pip install -e ".[dev]"
 
-# Run all unit tests
 pytest tests/ -m "not integration" -v --cov=clinicaltrial_match
-
-# Lint + format
 ruff check clinicaltrial_match/ tests/
-ruff format clinicaltrial_match/ tests/
-
-# Type check
 mypy clinicaltrial_match/ --ignore-missing-imports
+```
 
-# Integration tests (requires ANTHROPIC_API_KEY + network)
-pytest tests/ -m integration -v
+Integration tests (hit real APIs):
+```bash
+ANTHROPIC_API_KEY=... pytest tests/ -m integration -v
 ```
 
 ---
 
-## Security
+## Disclaimer
 
-- **API key auth** — Set `CTM_AUTH__API_KEY` to require `X-API-Key` header on all `/v1/*` routes
-- **No secrets in code** — API keys loaded from env vars only
-- **Input validation** — All endpoints validate bounds on numeric params and string lengths
+This tool is for **research and informational purposes only**. It is not a substitute for clinical judgment. Always verify trial eligibility directly with the trial site and a qualified clinician before making any medical decisions.
 
 ---
 
 ## License
 
-MIT
+MIT © 2026 Nithin Sarva
