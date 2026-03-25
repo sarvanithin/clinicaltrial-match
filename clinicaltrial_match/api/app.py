@@ -6,14 +6,17 @@ Mirrors medguard's create_app() pattern with lifespan for embedding warmup.
 
 from __future__ import annotations
 
+import copy
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -31,9 +34,57 @@ _DESCRIPTION = """
 - Get ranked results with confidence scores and plain-English explanations
 """
 
+_X_GUIDANCE = (
+    "Use POST /v1/match/live to match a patient to recruiting clinical trials. "
+    "Send a JSON body with 'source' ('note' or 'fhir'), 'note_text' (free-text clinical note) "
+    "or 'fhir_data' (FHIR R4 bundle), and optional 'max_results' (default 10) and "
+    "'min_score' (0–1, default 0.2). Returns ranked trial matches with confidence scores "
+    "and plain-English eligibility explanations. "
+    "This endpoint requires an MPP payment of $0.05 USDC per call — "
+    "send 'Authorization: Payment <credential>' after receiving the 402 challenge."
+)
+
+
+def _inject_mpp_schema(schema: dict[str, Any], ownership_proofs: list[str]) -> dict[str, Any]:
+    """Inject MPP-required fields into an existing OpenAPI schema dict."""
+    schema = copy.deepcopy(schema)
+
+    # Agent-readable guidance at the top level
+    schema.setdefault("info", {})["x-guidance"] = _X_GUIDANCE
+
+    # Ownership proofs for mppscan.com registration
+    if ownership_proofs:
+        schema["x-discovery"] = {"ownershipProofs": ownership_proofs}
+
+    # Annotate POST /v1/match/live as a payable operation
+    live_op = schema.get("paths", {}).get("/v1/match/live", {}).get("post")
+    if live_op:
+        live_op["x-payment-info"] = {
+            "pricingMode": "fixed",
+            "price": "0.050000",
+            "protocols": ["mpp"],
+        }
+        live_op.setdefault("responses", {})["402"] = {
+            "description": "Payment Required — send MPP credential in Authorization header",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "error": {"type": "string"},
+                            "price_usd": {"type": "string"},
+                        },
+                    }
+                }
+            },
+        }
+
+    return schema
+
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    from clinicaltrial_match.api.mpp_payment import create_mpp
     from clinicaltrial_match.config import get_config
     from clinicaltrial_match.infrastructure.claude_client import ClaudeClient
     from clinicaltrial_match.infrastructure.db import Database
@@ -54,7 +105,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     embeddings = EmbeddingIndex(config.embedding)
     embeddings.load_from_db(db)
 
-    claude = ClaudeClient(config.claude)
+    claude = ClaudeClient(config.claude, martian_config=config.martian)
+    structlog.get_logger().info("llm_backend", backend=claude.backend)
     trial_repo = TrialRepository(db, embeddings)
     patient_repo = PatientRepository(db)
     eligibility_parser = EligibilityParser(claude, concurrency=config.trials.parse_concurrency)
@@ -72,6 +124,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.note_extractor = note_extractor
     app.state.trial_fetcher = trial_fetcher
     app.state.matching_engine = matching_engine
+    app.state.mpp = create_mpp(config.mpp)
 
     yield
 
@@ -118,6 +171,23 @@ def create_app() -> FastAPI:
     static_dir = Path(__file__).parent.parent / "static"
     if static_dir.exists():
         app.mount("/ui", StaticFiles(directory=static_dir, html=True), name="ui")
+
+    # Custom OpenAPI schema — injects MPP x-payment-info, x-guidance, x-discovery
+    ownership_proofs = config.mpp.ownership_proofs
+
+    def custom_openapi() -> dict[str, Any]:
+        if app.openapi_schema:
+            return app.openapi_schema
+        base = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
+        app.openapi_schema = _inject_mpp_schema(base, ownership_proofs)
+        return app.openapi_schema
+
+    app.openapi = custom_openapi  # type: ignore[method-assign]
 
     @app.get("/", include_in_schema=False)
     async def root() -> RedirectResponse:

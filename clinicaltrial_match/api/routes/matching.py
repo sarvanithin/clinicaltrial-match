@@ -26,6 +26,24 @@ logger = structlog.get_logger()
 
 @router.post("/live", response_model=LiveMatchResponse)
 async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchResponse:
+    # MPP payment gate — only active when CTM_MPP__ENABLED=true + recipient set
+    mpp = getattr(request.app.state, "mpp", None)
+    if mpp is not None:
+        from mpp import Challenge
+
+        from clinicaltrial_match.config import get_config
+
+        price = get_config().mpp.price_per_query
+        result = await mpp.charge(
+            authorization=request.headers.get("Authorization"),
+            amount=price,
+        )
+        if isinstance(result, Challenge):
+            return JSONResponse(  # type: ignore[return-value]
+                status_code=402,
+                content={"error": "Payment required", "price_usd": price},
+                headers={"WWW-Authenticate": result.to_www_authenticate(mpp.realm)},
+            )
     """Ephemeral match — patient data is never written to disk or database."""
     if body.source not in ("fhir", "note"):
         return JSONResponse(status_code=422, content={"detail": "source must be 'fhir' or 'note'"})  # type: ignore[return-value]

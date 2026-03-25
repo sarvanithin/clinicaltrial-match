@@ -38,6 +38,8 @@ dependencies = [
     "diskcache>=5.6.0",
     "anyio>=4.4.0",
     "rich>=13.7.0",
+    "pympp[tempo]>=0.1.0",
+    "openai>=1.0.0",
 ]
 
 [project.optional-dependencies]

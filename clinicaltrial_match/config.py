@@ -64,6 +64,41 @@ class AuthConfig(BaseModel):
     enabled: bool = False
 
 
+class MartianConfig(BaseModel):
+    """Martian Gateway — OpenAI-compatible router over 200+ models.
+
+    Enable by setting MARTIAN_API_KEY (or the configured api_key_env).
+    When enabled, ALL Claude calls are routed through Martian instead of
+    hitting Anthropic directly, reducing cost via intelligent model routing.
+
+    Env override examples:
+        CTM_MARTIAN__API_KEY_ENV=MARTIAN_API_KEY
+        CTM_MARTIAN__FAST_MODEL=anthropic/claude-haiku-4-5-20251001
+        CTM_MARTIAN__REASONING_MODEL=anthropic/claude-sonnet-4-6-20251101
+    """
+
+    api_key_env: str = "MARTIAN_API_KEY"
+    base_url: str = "https://api.withmartian.com/v1"
+    # Use Martian's provider/model format; defaults mirror the ClaudeConfig models
+    fast_model: str = "anthropic/claude-haiku-4-5-20251001"
+    reasoning_model: str = "anthropic/claude-sonnet-4-6-20251101"
+
+
+class MPPConfig(BaseModel):
+    """Machine Payments Protocol (MPP) settings for pay-per-query billing."""
+
+    enabled: bool = False
+    recipient_address: str = ""
+    # pathUSD on Tempo blockchain
+    currency: str = "0x20c0000000000000000000000000000000000000"
+    # USD price charged per live-match query
+    price_per_query: str = "0.050000"
+    # Random hex secret used to sign/verify MPP payment credentials (MPP_SECRET_KEY)
+    secret_key_env: str = "MPP_SECRET_KEY"
+    # Populated after registering on mppscan.com/register
+    ownership_proofs: list[str] = Field(default_factory=list)
+
+
 class CTMConfig(BaseSettings):
     trials: TrialsConfig = Field(default_factory=TrialsConfig)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
@@ -71,6 +106,8 @@ class CTMConfig(BaseSettings):
     db: DatabaseConfig = Field(default_factory=DatabaseConfig)
     api: APIConfig = Field(default_factory=APIConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    martian: MartianConfig = Field(default_factory=MartianConfig)
+    mpp: MPPConfig = Field(default_factory=MPPConfig)
 
     model_config = SettingsConfigDict(
         env_prefix="CTM_",
