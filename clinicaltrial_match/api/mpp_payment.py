@@ -30,7 +30,7 @@ def create_mpp(config: MPPConfig):  # type: ignore[return]
     if not secret_key:
         raise ValueError(
             f"MPP is enabled but {config.secret_key_env} is not set. "
-            "Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\""
+            'Generate one with: python3 -c "import secrets; print(secrets.token_hex(32))"'
         )
 
     from mpp.methods.tempo import ChargeIntent, tempo

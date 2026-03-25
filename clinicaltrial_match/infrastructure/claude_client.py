@@ -69,10 +69,7 @@ class ClaudeClient:
         # Anthropic client — only required when Martian is not active
         api_key = os.environ.get(config.api_key_env, "")
         if not api_key and self._martian is None:
-            raise ValueError(
-                f"Missing env var: {config.api_key_env}. "
-                "Set ANTHROPIC_API_KEY or MARTIAN_API_KEY."
-            )
+            raise ValueError(f"Missing env var: {config.api_key_env}. Set ANTHROPIC_API_KEY or MARTIAN_API_KEY.")
         self._client = anthropic.AsyncAnthropic(api_key=api_key or "unused") if api_key else None
 
     def _martian_model(self, anthropic_model: str) -> str:
