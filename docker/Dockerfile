@@ -8,10 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml README.md ./
 COPY clinicaltrial_match/ ./clinicaltrial_match/
 
-ARG EXTRAS="nlp"
+ARG EXTRAS="mpp"
 RUN pip install --no-cache-dir ".[${EXTRAS}]"
-
-RUN python -m spacy download en_core_web_sm
 
 ENV CTM_DB__PATH=/data/clinicaltrial_match.db
 ENV CTM_API__HOST=0.0.0.0
