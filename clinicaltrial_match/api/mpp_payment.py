@@ -26,15 +26,24 @@ def create_mpp(config: MPPConfig):  # type: ignore[return]
     if not config.enabled or not config.recipient_address:
         return None
 
+    try:
+        from mpp.methods.tempo import ChargeIntent, tempo
+        from mpp.server import Mpp
+    except ImportError:
+        import warnings
+
+        warnings.warn(
+            "CTM_MPP__ENABLED=true but pympp is not installed — MPP disabled. Fix build command: pip install -e '.[mpp]'",
+            stacklevel=2,
+        )
+        return None
+
     secret_key = os.environ.get(config.secret_key_env, "")
     if not secret_key:
         raise ValueError(
             f"MPP is enabled but {config.secret_key_env} is not set. "
             'Generate one with: python3 -c "import secrets; print(secrets.token_hex(32))"'
         )
-
-    from mpp.methods.tempo import ChargeIntent, tempo
-    from mpp.server import Mpp
 
     return Mpp.create(
         method=tempo(
