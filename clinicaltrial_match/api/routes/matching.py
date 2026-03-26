@@ -26,6 +26,9 @@ logger = structlog.get_logger()
 
 def _is_browser_request(request: Request) -> bool:
     """Return True for browser/UI requests that should bypass the MPP gate."""
+    # Explicit header from our static UI (GitHub Pages / same-origin) — most reliable.
+    if request.headers.get("x-ctm-ui") == "1":
+        return True
     # GitHub Pages (and other static hosts) call the API cross-site from browser JS.
     # Those fetches won't include text/html in Accept, so detect by User-Agent too.
     ua = request.headers.get("user-agent", "")
@@ -38,9 +41,9 @@ def _is_browser_request(request: Request) -> bool:
     # Requests originating from the same deployment (UI calling its own API)
     origin = request.headers.get("origin", "")
     referer = request.headers.get("referer", "")
-    if origin and "onrender.com" in origin:
+    if origin and ("onrender.com" in origin or "github.io" in origin):
         return True
-    if referer and "onrender.com" in referer:
+    if referer and ("onrender.com" in referer or "github.io" in referer):
         return True
     return False
 

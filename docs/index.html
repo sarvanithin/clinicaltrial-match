@@ -313,6 +313,8 @@ const defaultApi =
     ? 'https://mirkier-despitefully-coralie.ngrok-free.dev'
     : '';
 const API = apiParam || defaultApi;
+// Tells backend to skip MPP gate for this UI (agentcash/CLI still pay)
+const UI_FETCH_HEADERS = { 'X-CTM-UI': '1' };
 let _conditionCache = [];
 
 // ── Utils ─────────────────────────────────────────────────────────────
@@ -367,7 +369,7 @@ function showSection(name) {
 // ── Health check ──────────────────────────────────────────────────────
 async function loadHealth() {
   try {
-    const r = await fetch(API + '/v1/health');
+    const r = await fetch(API + '/v1/health', { headers: UI_FETCH_HEADERS });
     const d = await r.json();
     const dot = document.getElementById('health-indicator');
     dot.className = `w-2 h-2 rounded-full inline-block ${d.status === 'healthy' ? 'bg-green-400' : 'bg-yellow-400'}`;
@@ -460,7 +462,7 @@ async function runLiveMatch() {
   try {
     const r = await fetch(API + '/v1/match/live', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-CTM-UI': '1' },
       body: JSON.stringify(payload),
     });
     const d = await r.json();
@@ -651,7 +653,7 @@ async function syncTrials() {
   try {
     const r = await fetch(API + '/v1/trials/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-CTM-UI': '1' },
       body: JSON.stringify({ condition, max_trials: maxTrials, status_filter: ['RECRUITING', 'NOT_YET_RECRUITING', 'ACTIVE_NOT_RECRUITING'] }),
     });
     const job = await r.json();
@@ -666,7 +668,7 @@ async function syncTrials() {
 async function pollSync(jobId, max) {
   const poll = async () => {
     try {
-      const r = await fetch(API + '/v1/trials/sync/' + jobId);
+      const r = await fetch(API + '/v1/trials/sync/' + jobId, { headers: UI_FETCH_HEADERS });
       const d = await r.json();
       const pct = max > 0 ? Math.min(95, Math.round((d.trials_fetched / max) * 100)) : 50;
       document.getElementById('sync-bar').style.width = pct + '%';
@@ -691,7 +693,7 @@ async function pollSync(jobId, max) {
 
 async function loadAllConditions() {
   try {
-    const r = await fetch(API + '/v1/trials/autocomplete?q=');
+    const r = await fetch(API + '/v1/trials/autocomplete?q=', { headers: UI_FETCH_HEADERS });
     const d = await r.json();
     _conditionCache = d.suggestions || [];
   } catch (_) {}
@@ -701,7 +703,7 @@ async function fetchAutocompleteSuggestions(q, datalistId) {
   const dl = document.getElementById(datalistId);
   if (!dl) return;
   try {
-    const r = await fetch(API + '/v1/trials/autocomplete?q=' + encodeURIComponent(q));
+    const r = await fetch(API + '/v1/trials/autocomplete?q=' + encodeURIComponent(q), { headers: UI_FETCH_HEADERS });
     const d = await r.json();
     dl.innerHTML = (d.suggestions || []).map(s => `<option value="${escHtml(s)}">`).join('');
   } catch (_) {}
@@ -718,7 +720,7 @@ async function loadTrials() {
   list.innerHTML = '<div class="text-gray-400 text-sm py-4">Loading…</div>';
 
   try {
-    const r = await fetch(url);
+    const r = await fetch(url, { headers: UI_FETCH_HEADERS });
     const d = await r.json();
     if (!r.ok) { list.innerHTML = `<div class="text-red-500 text-sm py-4">${escHtml(d.detail || r.status)}</div>`; return; }
     document.getElementById('trials-count').textContent = `${d.total} trial${d.total !== 1 ? 's' : ''}`;
@@ -771,7 +773,7 @@ async function openTrialDrawer(nctId) {
   overlay.classList.remove('hidden');
 
   try {
-    const r = await fetch(API + '/v1/trials/' + encodeURIComponent(nctId));
+    const r = await fetch(API + '/v1/trials/' + encodeURIComponent(nctId), { headers: UI_FETCH_HEADERS });
     if (!r.ok) { content.innerHTML = '<p class="text-gray-400">Trial details not available.</p>'; return; }
     const t = await r.json();
     document.getElementById('drawer-title').textContent = t.nct_id;
