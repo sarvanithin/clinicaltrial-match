@@ -24,11 +24,28 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 
+def _is_browser_request(request: Request) -> bool:
+    """Return True for browser/UI requests that should bypass the MPP gate."""
+    # Requests with an Accept header preferring HTML come from browsers
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        return True
+    # Requests originating from the same deployment (UI calling its own API)
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+    if origin and "onrender.com" in origin:
+        return True
+    if referer and "onrender.com" in referer:
+        return True
+    return False
+
+
 @router.post("/live", response_model=LiveMatchResponse)
 async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchResponse:
     # MPP payment gate — only active when CTM_MPP__ENABLED=true + recipient set
+    # Browser/UI requests bypass the gate so the demo works without a wallet
     mpp = getattr(request.app.state, "mpp", None)
-    if mpp is not None:
+    if mpp is not None and not _is_browser_request(request):
         from mpp import Challenge
 
         from clinicaltrial_match.config import get_config

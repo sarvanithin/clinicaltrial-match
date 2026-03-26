@@ -187,7 +187,11 @@ class TrialFetcher:
             "format": "json",
         }
 
-        async with httpx.AsyncClient() as client:
+        headers = {
+            "User-Agent": "clinicaltrial-match/0.1.0 (https://clinicaltrial-match.onrender.com; research use)",
+            "Accept": "application/json",
+        }
+        async with httpx.AsyncClient(headers=headers) as client:
             while fetched < max_trials:
                 data = await self._get_page(client, params)
                 studies = data.get("studies", [])
