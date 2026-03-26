@@ -26,6 +26,11 @@ logger = structlog.get_logger()
 
 def _is_browser_request(request: Request) -> bool:
     """Return True for browser/UI requests that should bypass the MPP gate."""
+    # GitHub Pages (and other static hosts) call the API cross-site from browser JS.
+    # Those fetches won't include text/html in Accept, so detect by User-Agent too.
+    ua = request.headers.get("user-agent", "")
+    if "Mozilla/" in ua:
+        return True
     # Requests with an Accept header preferring HTML come from browsers
     accept = request.headers.get("accept", "")
     if "text/html" in accept:
