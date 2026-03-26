@@ -304,8 +304,15 @@
 </div>
 
 <script>
-// Allow ?api=https://... override so GitHub Pages can point to local ngrok backend
-const API = new URLSearchParams(window.location.search).get('api') || '';
+// Allow ?api=https://... override so GitHub Pages can point to local/ngrok backend.
+// If unset and running on github.io, default to the current ngrok URL.
+// (You can always override by appending ?api=... to the URL.)
+const apiParam = new URLSearchParams(window.location.search).get('api');
+const defaultApi =
+  window.location.hostname.endsWith('github.io')
+    ? 'https://mirkier-despitefully-coralie.ngrok-free.dev'
+    : '';
+const API = apiParam || defaultApi;
 let _conditionCache = [];
 
 // ── Utils ─────────────────────────────────────────────────────────────
