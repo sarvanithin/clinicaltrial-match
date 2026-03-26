@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -54,7 +54,7 @@ def engine_with_mock_search(populated_db_and_repo, mock_embeddings, mock_claude)
     PatientRepository(db).save(_make_patient_record())
     # Make semantic searcher return the stored trial as top hit
     searcher = MagicMock(spec=SemanticSearcher)
-    searcher.search.return_value = [("NCT99999999", 0.82)]
+    searcher.search_async = AsyncMock(return_value=[("NCT99999999", 0.82)])
     return MatchingEngine(db, repo, searcher, mock_claude)
 
 
@@ -92,7 +92,7 @@ async def test_match_result_has_explanation(engine_with_mock_search):
 async def test_match_filters_by_status(engine_with_mock_search, populated_db_and_repo, mock_claude):
     db, repo = populated_db_and_repo
     searcher = MagicMock(spec=SemanticSearcher)
-    searcher.search.return_value = [("NCT99999999", 0.82)]
+    searcher.search_async = AsyncMock(return_value=[("NCT99999999", 0.82)])
     engine = MatchingEngine(db, repo, searcher, mock_claude)
     features = _make_patient_features()
     request = MatchRequest(patient_id="p-001", trial_status_filter=["COMPLETED"])
@@ -115,7 +115,7 @@ async def test_match_no_candidates(populated_db_and_repo, mock_embeddings, mock_
 
     PatientRepository(db).save(_make_patient_record())
     searcher = MagicMock(spec=SemanticSearcher)
-    searcher.search.return_value = []
+    searcher.search_async = AsyncMock(return_value=[])
     engine = MatchingEngine(db, repo, searcher, mock_claude)
     features = _make_patient_features()
     request = MatchRequest(patient_id="p-001")

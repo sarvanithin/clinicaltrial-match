@@ -19,11 +19,23 @@ class SemanticSearcher:
         features: PatientFeatures,
         top_k: int = 30,
     ) -> list[tuple[str, float]]:
-        """Return list of (nct_id, cosine_similarity) sorted descending."""
+        """Synchronous search — use search_async in async contexts."""
         query_text = features.clinical_summary or _build_fallback_query(features)
         if not query_text.strip():
             return []
         query_vec = self._embeddings.encode_one(query_text)
+        return self._embeddings.search(query_vec, top_k)
+
+    async def search_async(
+        self,
+        features: PatientFeatures,
+        top_k: int = 30,
+    ) -> list[tuple[str, float]]:
+        """Async-safe search — runs encoding in thread pool to avoid blocking event loop."""
+        query_text = features.clinical_summary or _build_fallback_query(features)
+        if not query_text.strip():
+            return []
+        query_vec = await self._embeddings.encode_one_async(query_text)
         return self._embeddings.search(query_vec, top_k)
 
 

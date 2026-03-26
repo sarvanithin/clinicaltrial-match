@@ -43,6 +43,19 @@ class EmbeddingIndex:
     def encode_one(self, text: str) -> np.ndarray:
         return self.encode([text])[0]
 
+    async def encode_one_async(self, text: str) -> np.ndarray:
+        """Run encoding in a thread pool so it never blocks the async event loop."""
+        import asyncio
+        import functools
+
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, functools.partial(self.encode_one, text))
+
+    def warmup(self) -> None:
+        """Pre-load the model and run a dummy encode so first real request is instant."""
+        self._load_model()
+        self.encode(["warmup"])
+
     @staticmethod
     def to_bytes(vec: np.ndarray) -> bytes:
         return vec.astype(np.float32).tobytes()

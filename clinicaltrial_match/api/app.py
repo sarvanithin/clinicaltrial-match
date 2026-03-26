@@ -126,6 +126,13 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.matching_engine = matching_engine
     app.state.mpp = create_mpp(config.mpp)
 
+    # Pre-load the sentence-transformers model so the first request isn't blocked
+    import asyncio
+    import functools
+
+    await asyncio.get_event_loop().run_in_executor(None, functools.partial(embeddings.warmup))
+    structlog.get_logger().info("embeddings_warmed")
+
     yield
 
     db.close()
