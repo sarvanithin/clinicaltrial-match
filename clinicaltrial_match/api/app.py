@@ -156,10 +156,13 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
 
+    # credentials=False allows allow_origins=["*"] to work for browser fetch() from
+    # GitHub Pages → ngrok / Render. credentials=True + wildcard origin is invalid per spec
+    # and browsers block with "No Access-Control-Allow-Origin".
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.api.cors_origins,
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
