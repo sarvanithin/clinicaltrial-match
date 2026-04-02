@@ -16,7 +16,6 @@ ENV CTM_API__HOST=0.0.0.0
 ENV CTM_API__PORT=8000
 
 RUN mkdir -p /data
-VOLUME ["/data"]
 
 EXPOSE 8000
 
