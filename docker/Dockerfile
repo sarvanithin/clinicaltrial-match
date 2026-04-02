@@ -8,8 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml README.md ./
 COPY clinicaltrial_match/ ./clinicaltrial_match/
 
+# Install CPU-only torch first to prevent pulling 2GB+ CUDA packages
+RUN pip install --no-cache-dir torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
 ARG EXTRAS="mpp"
-RUN pip install --no-cache-dir ".[${EXTRAS}]"
+RUN pip install --no-cache-dir ".[${EXTRAS}]" --no-deps || pip install --no-cache-dir ".[${EXTRAS}]"
 
 ENV CTM_DB__PATH=/data/clinicaltrial_match.db
 ENV CTM_API__HOST=0.0.0.0
