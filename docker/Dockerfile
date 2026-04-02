@@ -14,6 +14,10 @@ RUN pip install --no-cache-dir torch==2.2.0+cpu --index-url https://download.pyt
 ARG EXTRAS="mpp"
 RUN pip install --no-cache-dir ".[${EXTRAS}]" --no-deps || pip install --no-cache-dir ".[${EXTRAS}]"
 
+# Pre-download sentence-transformers model so lifespan warmup doesn't block startup
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')" \
+    || echo "Warning: model download failed, will download at runtime"
+
 ENV CTM_DB__PATH=/data/clinicaltrial_match.db
 ENV CTM_API__HOST=0.0.0.0
 ENV CTM_API__PORT=8000
