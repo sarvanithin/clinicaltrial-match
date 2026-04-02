@@ -6,18 +6,14 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /v1/health
-    disk:
-      name: ctm-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
-      - key: ANTHROPIC_API_KEY
-        sync: false          # set this manually in the Render dashboard — never committed to git
+      - key: MARTIAN_API_KEY
+        value: sk-42472a65551a48fd8face8ea27ef371f
       - key: CTM_DB__PATH
-        value: /data/clinicaltrial_match.db
+        value: /tmp/clinicaltrial_match.db
       - key: CTM_API__HOST
         value: 0.0.0.0
       - key: CTM_API__PORT
         value: "8000"
-      - key: CTM_API__LOG_LEVEL
-        value: INFO
+      - key: PORT
+        value: "8000"
