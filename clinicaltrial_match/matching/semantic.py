@@ -20,6 +20,8 @@ class SemanticSearcher:
         top_k: int = 30,
     ) -> list[tuple[str, float]]:
         """Synchronous search — use search_async in async contexts."""
+        if not self._embeddings.has_index:
+            return []
         query_text = features.clinical_summary or _build_fallback_query(features)
         if not query_text.strip():
             return []
@@ -32,6 +34,8 @@ class SemanticSearcher:
         top_k: int = 30,
     ) -> list[tuple[str, float]]:
         """Async-safe search — runs encoding in thread pool to avoid blocking event loop."""
+        if not self._embeddings.has_index:
+            return []
         query_text = features.clinical_summary or _build_fallback_query(features)
         if not query_text.strip():
             return []

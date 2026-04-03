@@ -102,6 +102,19 @@ async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchRespo
 
     f = patient.features
 
+    # Fast-fail if no trials have been synced yet
+    embeddings = request.app.state.embeddings
+    if not embeddings.has_index:
+        return JSONResponse(  # type: ignore[return-value]
+            status_code=503,
+            content={
+                "detail": (
+                    "No trial data available yet. "
+                    "Go to Browse Trials and click 'Sync New Trials' to load trials from ClinicalTrials.gov first."
+                )
+            },
+        )
+
     match_req = MatchRequest(
         patient_id="_ephemeral",
         max_results=body.max_results,

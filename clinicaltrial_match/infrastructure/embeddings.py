@@ -121,5 +121,10 @@ class EmbeddingIndex:
         top_indices = np.argsort(scores)[::-1][:top_k]
         return [(self._nct_ids[i], float(scores[i])) for i in top_indices]
 
+    @property
+    def has_index(self) -> bool:
+        """True when there are trial embeddings to search against."""
+        return self._matrix is not None and len(self._nct_ids) > 0
+
     def size(self) -> int:
         return len(self._nct_ids)
