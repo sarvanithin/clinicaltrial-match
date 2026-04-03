@@ -76,6 +76,32 @@ async def list_trials(
     )
 
 
+@router.get("/autocomplete", response_model=AutocompleteResponse)
+async def autocomplete_conditions(
+    request: Request,
+    q: str = Query(default="", min_length=0),
+) -> AutocompleteResponse:
+    if len(q) > 200:
+        return JSONResponse(  # type: ignore[return-value]
+            status_code=422,
+            content={"detail": "q must be at most 200 characters", "field": "q"},
+        )
+    try:
+        db = request.app.state.db
+        all_conditions = db.get_all_conditions()
+    except Exception as exc:
+        logger.error("autocomplete_error", error=str(exc))
+        return JSONResponse(  # type: ignore[return-value]
+            status_code=500,
+            content={"detail": "Internal server error fetching conditions"},
+        )
+
+    q_lower = q.lower().strip()
+    suggestions = [c for c in all_conditions if not q_lower or q_lower in c.lower()][:10]
+
+    return AutocompleteResponse(suggestions=suggestions)
+
+
 @router.get("/{nct_id}")
 async def get_trial(request: Request, nct_id: str) -> dict:
     try:
@@ -256,32 +282,6 @@ async def compare_trials(request: Request, body: CompareRequest) -> CompareRespo
         trials_out.append(entry)
 
     return CompareResponse(trials=trials_out)
-
-
-@router.get("/autocomplete", response_model=AutocompleteResponse)
-async def autocomplete_conditions(
-    request: Request,
-    q: str = Query(default="", min_length=0),
-) -> AutocompleteResponse:
-    if len(q) > 200:
-        return JSONResponse(  # type: ignore[return-value]
-            status_code=422,
-            content={"detail": "q must be at most 200 characters", "field": "q"},
-        )
-    try:
-        db = request.app.state.db
-        all_conditions = db.get_all_conditions()
-    except Exception as exc:
-        logger.error("autocomplete_error", error=str(exc))
-        return JSONResponse(  # type: ignore[return-value]
-            status_code=500,
-            content={"detail": "Internal server error fetching conditions"},
-        )
-
-    q_lower = q.lower().strip()
-    suggestions = [c for c in all_conditions if not q_lower or q_lower in c.lower()][:10]
-
-    return AutocompleteResponse(suggestions=suggestions)
 
 
 def _parse_json_col(value: str | None) -> list:

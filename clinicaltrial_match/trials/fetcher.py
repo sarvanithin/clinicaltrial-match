@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 import structlog
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from clinicaltrial_match.config import TrialsConfig
 from clinicaltrial_match.trials.models import TrialStatus
@@ -145,9 +145,12 @@ class TrialFetcher:
         self._config = config
 
     @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=2, min=2, max=60),
-        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError)),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=2, min=2, max=30),
+        retry=retry_if_exception(
+            lambda e: isinstance(e, (httpx.TimeoutException, httpx.NetworkError))
+            or (isinstance(e, httpx.HTTPStatusError) and e.response.status_code >= 500)
+        ),
         before_sleep=lambda retry_state: _logger.warning(
             "fetcher_retry",
             attempt=retry_state.attempt_number,
@@ -188,10 +191,16 @@ class TrialFetcher:
         }
 
         headers = {
-            "User-Agent": "clinicaltrial-match/0.1.0 (https://clinicaltrial-match.onrender.com; research use)",
-            "Accept": "application/json",
+            "User-Agent": (
+                "Mozilla/5.0 (compatible; clinicaltrial-match/0.1.0; "
+                "+https://clinicaltrial-match.onrender.com; research use)"
+            ),
+            "Accept": "application/json, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
         }
-        async with httpx.AsyncClient(headers=headers) as client:
+        async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
             while fetched < max_trials:
                 data = await self._get_page(client, params)
                 studies = data.get("studies", [])
