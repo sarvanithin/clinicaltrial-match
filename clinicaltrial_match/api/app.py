@@ -24,7 +24,6 @@ from clinicaltrial_match.api.routes.health import router as health_router
 from clinicaltrial_match.api.routes.matching import router as matching_router
 from clinicaltrial_match.api.routes.patients import router as patients_router
 from clinicaltrial_match.api.routes.trials import router as trials_router
-from clinicaltrial_match.trials.fetcher import normalize_study
 
 _DESCRIPTION = """
 **clinicaltrial-match** — AI-powered clinical trial matching from patient records.
@@ -84,8 +83,15 @@ def _inject_mpp_schema(schema: dict[str, Any], ownership_proofs: list[str]) -> d
 
 
 def _seed_if_empty(db, trial_repo, embeddings) -> None:
-    """Load bundled seed trials into the DB if it is empty."""
+    """Load bundled seed trials (with pre-computed embeddings) into the DB if empty.
+
+    Embeddings are stored as base64 float32 blobs so no model download is needed
+    at seed time — the DB is ready in seconds rather than minutes.
+    """
+    import base64
     import json
+
+    import numpy as np
 
     log = structlog.get_logger()
     try:
@@ -102,24 +108,19 @@ def _seed_if_empty(db, trial_repo, embeddings) -> None:
         return
 
     try:
-        studies = json.loads(seed_path.read_text())
+        records = json.loads(seed_path.read_text())
         loaded = 0
-        for raw_study in studies:
+        for rec in records:
             try:
-                normalized = normalize_study(raw_study)
-                vec = embeddings.encode_one(
-                    f"{normalized['title']}. {normalized['brief_summary'][:300]}. "
-                    f"Conditions: {', '.join(normalized['conditions'])}."
-                )
-                trial_repo.save_raw(normalized, None, vec)
+                b64 = rec.pop("_embedding_b64", None)
+                vec = np.frombuffer(base64.b64decode(b64), dtype=np.float32) if b64 else None
+                trial_repo.save_raw(rec, None, vec)
+                if vec is not None:
+                    embeddings.add(rec["nct_id"], vec)
                 loaded += 1
             except Exception as exc:
-                log.warning(
-                    "seed_trial_error",
-                    nct_id=raw_study.get("protocolSection", {}).get("identificationModule", {}).get("nctId"),
-                    error=str(exc),
-                )
-        log.info("seed_complete", loaded=loaded, total=len(studies))
+                log.warning("seed_trial_error", nct_id=rec.get("nct_id"), error=str(exc))
+        log.info("seed_complete", loaded=loaded, total=len(records))
     except Exception as exc:
         log.error("seed_failed", error=str(exc))
 
@@ -173,7 +174,11 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     def _seed_and_warmup():
         _seed_if_empty(db, trial_repo, embeddings)
-        embeddings.warmup()
+        # Warmup loads the model for future encode calls; seed already injected vecs
+        try:
+            embeddings.warmup()
+        except Exception:
+            pass
 
     asyncio.get_event_loop().run_in_executor(None, _seed_and_warmup)
     structlog.get_logger().info("seed_and_warmup_started_in_background")
