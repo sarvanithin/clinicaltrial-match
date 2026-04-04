@@ -126,5 +126,10 @@ class EmbeddingIndex:
         """True when there are trial embeddings to search against."""
         return self._matrix is not None and len(self._nct_ids) > 0
 
+    @property
+    def is_model_ready(self) -> bool:
+        """True when the sentence-transformers model is loaded and can encode queries."""
+        return self._model is not None
+
     def size(self) -> int:
         return len(self._nct_ids)

@@ -102,17 +102,18 @@ async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchRespo
 
     f = patient.features
 
-    # Fast-fail if no trials have been synced yet
+    # Fast-fail if no trials loaded or model not ready yet
     embeddings = getattr(request.app.state, "embeddings", None)
     if embeddings is None or not embeddings.has_index:
         return JSONResponse(  # type: ignore[return-value]
             status_code=503,
-            content={
-                "detail": (
-                    "No trial data available yet. "
-                    "Go to Browse Trials and click 'Sync New Trials' to load trials from ClinicalTrials.gov first."
-                )
-            },
+            content={"detail": "No trial data yet. Go to Browse Trials and wait for seed data to load."},
+        )
+    if not embeddings.is_model_ready:
+        return JSONResponse(  # type: ignore[return-value]
+            status_code=503,
+            content={"detail": "warming_up"},
+            headers={"Retry-After": "20"},
         )
 
     match_req = MatchRequest(
