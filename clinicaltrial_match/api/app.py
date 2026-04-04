@@ -24,6 +24,7 @@ from clinicaltrial_match.api.routes.health import router as health_router
 from clinicaltrial_match.api.routes.matching import router as matching_router
 from clinicaltrial_match.api.routes.patients import router as patients_router
 from clinicaltrial_match.api.routes.trials import router as trials_router
+from clinicaltrial_match.trials.fetcher import normalize_study
 
 _DESCRIPTION = """
 **clinicaltrial-match** — AI-powered clinical trial matching from patient records.
@@ -82,6 +83,47 @@ def _inject_mpp_schema(schema: dict[str, Any], ownership_proofs: list[str]) -> d
     return schema
 
 
+def _seed_if_empty(db, trial_repo, embeddings) -> None:
+    """Load bundled seed trials into the DB if it is empty."""
+    import json
+
+    log = structlog.get_logger()
+    try:
+        _, total = trial_repo.list(limit=1, offset=0)
+        if total > 0:
+            log.info("seed_skip", existing_trials=total)
+            return
+    except Exception:
+        return
+
+    seed_path = Path(__file__).parent.parent / "data" / "seed_trials.json"
+    if not seed_path.exists():
+        log.warning("seed_file_missing", path=str(seed_path))
+        return
+
+    try:
+        studies = json.loads(seed_path.read_text())
+        loaded = 0
+        for raw_study in studies:
+            try:
+                normalized = normalize_study(raw_study)
+                vec = embeddings.encode_one(
+                    f"{normalized['title']}. {normalized['brief_summary'][:300]}. "
+                    f"Conditions: {', '.join(normalized['conditions'])}."
+                )
+                trial_repo.save_raw(normalized, None, vec)
+                loaded += 1
+            except Exception as exc:
+                log.warning(
+                    "seed_trial_error",
+                    nct_id=raw_study.get("protocolSection", {}).get("identificationModule", {}).get("nctId"),
+                    error=str(exc),
+                )
+        log.info("seed_complete", loaded=loaded, total=len(studies))
+    except Exception as exc:
+        log.error("seed_failed", error=str(exc))
+
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     from clinicaltrial_match.api.mpp_payment import create_mpp
@@ -126,12 +168,15 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.matching_engine = matching_engine
     app.state.mpp = create_mpp(config.mpp)
 
-    # Warm up embeddings in the background so startup doesn't block port binding
+    # Seed DB from bundled data if empty (bypasses ClinicalTrials.gov IP blocks on cloud hosts)
     import asyncio
-    import functools
 
-    asyncio.get_event_loop().run_in_executor(None, functools.partial(embeddings.warmup))
-    structlog.get_logger().info("embeddings_warming_in_background")
+    def _seed_and_warmup():
+        _seed_if_empty(db, trial_repo, embeddings)
+        embeddings.warmup()
+
+    asyncio.get_event_loop().run_in_executor(None, _seed_and_warmup)
+    structlog.get_logger().info("seed_and_warmup_started_in_background")
 
     yield
 
