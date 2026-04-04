@@ -376,6 +376,7 @@ async function loadHealth() {
     document.getElementById('health-label').textContent = d.status;
     const countEl = document.getElementById('hero-trial-count');
     if (countEl && d.trials_cached > 0) countEl.textContent = d.trials_cached.toLocaleString();
+    if (d.trials_cached === 0) setTimeout(loadHealth, 10000);
   } catch (_) {
     document.getElementById('health-indicator').className = 'w-2 h-2 rounded-full inline-block bg-red-400';
     document.getElementById('health-label').textContent = 'offline';
@@ -692,8 +693,13 @@ async function pollSync(jobId, max) {
         loadTrials(); loadHealth(); loadAllConditions();
       } else if (d.status === 'failed') {
         document.getElementById('sync-spinner').classList.add('hidden');
-        document.getElementById('sync-msg').textContent = '✗ Failed: ' + (d.error || 'unknown error');
+        const err = d.error || 'unknown error';
+        const msg = err.includes('403') || err.includes('Forbidden')
+          ? '⚠ ClinicalTrials.gov blocked this server\'s IP (403). Pre-loaded seed data is available — click Refresh below to browse 97 bundled trials.'
+          : '✗ Failed: ' + err;
+        document.getElementById('sync-msg').textContent = msg;
         setLoading('sync-btn', false);
+        if (err.includes('403') || err.includes('Forbidden')) loadTrials();
       } else { setTimeout(poll, 1500); }
     } catch (_) { setTimeout(poll, 3000); }
   };
@@ -735,7 +741,16 @@ async function loadTrials() {
     document.getElementById('trials-count').textContent = `${d.total} trial${d.total !== 1 ? 's' : ''}`;
 
     if (!d.trials || !d.trials.length) {
-      list.innerHTML = '<div class="text-gray-400 text-sm py-6 text-center">No trials found. Use Sync New Trials to fetch from ClinicalTrials.gov.</div>';
+      list.innerHTML = `<div class="text-gray-400 text-sm py-8 text-center">
+        <svg class="spinner w-5 h-5 mx-auto mb-3 text-brand-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        <p class="font-medium text-gray-600">Preparing trial database…</p>
+        <p class="text-xs mt-1">Seed data is loading in the background. This takes ~2 minutes on first start.</p>
+        <button onclick="loadTrials()" class="mt-3 text-brand-600 text-xs border border-brand-200 rounded-lg px-3 py-1 hover:bg-brand-50">Refresh</button>
+      </div>`;
+      setTimeout(loadTrials, 8000);
       return;
     }
 
