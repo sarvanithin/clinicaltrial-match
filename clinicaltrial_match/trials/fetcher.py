@@ -148,8 +148,10 @@ class TrialFetcher:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, min=2, max=30),
         retry=retry_if_exception(
-            lambda e: isinstance(e, (httpx.TimeoutException, httpx.NetworkError))
-            or (isinstance(e, httpx.HTTPStatusError) and e.response.status_code >= 500)
+            lambda e: (
+                isinstance(e, (httpx.TimeoutException, httpx.NetworkError))
+                or (isinstance(e, httpx.HTTPStatusError) and e.response.status_code >= 500)
+            )
         ),
         before_sleep=lambda retry_state: _logger.warning(
             "fetcher_retry",
@@ -192,8 +194,7 @@ class TrialFetcher:
 
         headers = {
             "User-Agent": (
-                "Mozilla/5.0 (compatible; clinicaltrial-match/0.1.0; "
-                "+https://clinicaltrial-match.onrender.com; research use)"
+                "Mozilla/5.0 (compatible; clinicaltrial-match/0.1.0; +https://clinicaltrial-match.onrender.com; research use)"
             ),
             "Accept": "application/json, */*",
             "Accept-Language": "en-US,en;q=0.9",
