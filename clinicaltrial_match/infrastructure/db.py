@@ -178,6 +178,37 @@ class Database:
     def count_trials(self) -> int:
         return self.conn.execute("SELECT COUNT(*) FROM trials").fetchone()[0]
 
+    def keyword_search_trials(self, keywords: list[str], limit: int = 30) -> list[dict]:
+        """Return trials whose title/conditions/summary/eligibility contain any keyword.
+
+        Scores by number of keyword hits across fields so the most relevant
+        trials float to the top — no embedding model required.
+        """
+        if not keywords:
+            rows = self.conn.execute("SELECT * FROM trials ORDER BY cached_at DESC LIMIT ?", (limit,)).fetchall()
+            return [dict(r) for r in rows]
+
+        # Build OR clause: each keyword checked against 4 text columns
+        clauses, params = [], []
+        for kw in keywords:
+            pattern = f"%{kw}%"
+            clauses.append("(title LIKE ? OR conditions LIKE ? OR brief_summary LIKE ? OR eligibility_text LIKE ?)")
+            params.extend([pattern, pattern, pattern, pattern])
+
+        where = " OR ".join(clauses)
+        rows = self.conn.execute(f"SELECT * FROM trials WHERE {where} LIMIT ?", params + [limit * 3]).fetchall()
+
+        # Score by hit count across all keywords
+        scored = []
+        for row in rows:
+            d = dict(row)
+            text = " ".join(str(d.get(f, "") or "") for f in ("title", "conditions", "brief_summary", "eligibility_text")).lower()
+            score = sum(1 for kw in keywords if kw.lower() in text)
+            scored.append((score, d))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [d for _, d in scored[:limit]]
+
     # --- Patients ---
 
     def upsert_patient(self, patient_dict: dict[str, Any]) -> None:

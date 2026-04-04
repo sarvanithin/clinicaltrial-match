@@ -473,33 +473,14 @@ async function runLiveMatch() {
     clearTimeout(timer);
     const d = await r.json();
     if (!r.ok) {
-      if (r.status === 503 && d.detail === 'warming_up') {
-        resultsEl.innerHTML = `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-800 text-sm flex items-center gap-3">
-          <svg class="spinner w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-          <span>AI model warming up — retrying automatically in 20 seconds…</span>
-        </div>`;
-        setLoading('live-match-btn', false, btnOriginal, btnLoading);
-        document.getElementById('live-match-btn').innerHTML = btnOriginal;
-        setTimeout(runLiveMatch, 20000);
-        return;
-      }
       resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">${escHtml(d.detail || 'Error ' + r.status)}</div>`;
       return;
     }
     renderLiveResults(d);
   } catch (e) {
     clearTimeout(timer);
-    if (e.name === 'AbortError') {
-      resultsEl.innerHTML = `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-800 text-sm flex items-center gap-3">
-        <svg class="spinner w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-        <span>AI model still warming up — retrying in 20 seconds…</span>
-      </div>`;
-      setLoading('live-match-btn', false, btnOriginal, btnLoading);
-      document.getElementById('live-match-btn').innerHTML = btnOriginal;
-      setTimeout(runLiveMatch, 20000);
-      return;
-    }
-    resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">Network error: ${escHtml(e.message)}</div>`;
+    const msg = e.name === 'AbortError' ? 'Request timed out — server may be restarting, please try again.' : 'Network error: ' + e.message;
+    resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">${escHtml(msg)}</div>`;
   } finally {
     setLoading('live-match-btn', false, btnOriginal, btnLoading);
     document.getElementById('live-match-btn').innerHTML = btnOriginal;

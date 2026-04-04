@@ -109,13 +109,6 @@ async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchRespo
             status_code=503,
             content={"detail": "No trial data yet. Go to Browse Trials and wait for seed data to load."},
         )
-    if not embeddings.is_model_ready:
-        return JSONResponse(  # type: ignore[return-value]
-            status_code=503,
-            content={"detail": "warming_up"},
-            headers={"Retry-After": "20"},
-        )
-
     match_req = MatchRequest(
         patient_id="_ephemeral",
         max_results=body.max_results,

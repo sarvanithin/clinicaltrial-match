@@ -50,7 +50,7 @@ class MatchingEngine:
 
     async def match(self, features: PatientFeatures, request: MatchRequest, persist: bool = True) -> list[MatchResult]:
         candidate_k = request.max_results * 3
-        candidates = await self._searcher.search_async(features, top_k=candidate_k)
+        candidates = await self._searcher.search_async(features, top_k=candidate_k, db=self._db)
 
         if not candidates:
             return []
