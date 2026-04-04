@@ -459,12 +459,17 @@ async function runLiveMatch() {
       Extracting features &amp; searching trials — this may take 10–30 seconds…
     </div>`;
 
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 45000);
+
   try {
     const r = await fetch(API + '/v1/match/live', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CTM-UI': '1' },
       body: JSON.stringify(payload),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     const d = await r.json();
     if (!r.ok) {
       resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">${escHtml(d.detail || 'Error ' + r.status)}</div>`;
@@ -472,7 +477,11 @@ async function runLiveMatch() {
     }
     renderLiveResults(d);
   } catch (e) {
-    resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">Network error: ${escHtml(e.message)}</div>`;
+    clearTimeout(timer);
+    const msg = e.name === 'AbortError'
+      ? 'Request timed out (45s). The server may still be loading — try again in a moment, or sync trials first via Browse Trials.'
+      : 'Network error: ' + e.message;
+    resultsEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-5 text-red-700 text-sm">${escHtml(msg)}</div>`;
   } finally {
     setLoading('live-match-btn', false, btnOriginal, btnLoading);
     document.getElementById('live-match-btn').innerHTML = btnOriginal;

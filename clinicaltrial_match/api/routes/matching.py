@@ -103,8 +103,8 @@ async def live_match(request: Request, body: LiveMatchRequest) -> LiveMatchRespo
     f = patient.features
 
     # Fast-fail if no trials have been synced yet
-    embeddings = request.app.state.embeddings
-    if not embeddings.has_index:
+    embeddings = getattr(request.app.state, "embeddings", None)
+    if embeddings is None or not embeddings.has_index:
         return JSONResponse(  # type: ignore[return-value]
             status_code=503,
             content={
