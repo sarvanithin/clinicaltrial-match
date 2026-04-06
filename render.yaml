@@ -17,3 +17,9 @@ services:
         value: "8000"
       - key: PORT
         value: "8000"
+      - key: CTM_MPP__ENABLED
+        value: "true"
+      - key: CTM_MPP__RECIPIENT_ADDRESS
+        value: "0x0000000000000000000000000000000000000001"
+      - key: MPP_SECRET_KEY
+        value: "ctm-dev-secret"
