@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml README.md ./
 COPY clinicaltrial_match/ ./clinicaltrial_match/
 
-ARG EXTRAS="mpp"
+ARG EXTRAS="api,mpp"
 RUN pip install --no-cache-dir ".[${EXTRAS}]"
 
 # Force CPU-only torch to override any CUDA packages pulled by sentence-transformers
