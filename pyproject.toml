@@ -24,6 +24,12 @@ classifiers = [
 ]
 
 dependencies = [
+    "streamlit>=1.32.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+api = [
     "fastapi>=0.111.0,<0.120",
     "uvicorn[standard]>=0.29.0,<0.35",
     "httpx>=0.27.0,<0.29",
@@ -40,8 +46,6 @@ dependencies = [
     "rich>=13.7.0",
     "openai>=1.0.0",
 ]
-
-[project.optional-dependencies]
 nlp = [
     "spacy>=3.7.0,<4.0",
 ]
